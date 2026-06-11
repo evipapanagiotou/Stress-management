@@ -92,12 +92,14 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 }
 
 export default function TabsLayout() {
+  const { darkMode } = useTheme();
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
+        contentStyle: { backgroundColor: darkMode ? "#0B1220" : "#F8FAFC" },
       }}
     >
       <Tabs.Screen name="home" />

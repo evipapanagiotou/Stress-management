@@ -15,7 +15,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useTheme } from "..//context/ThemeContext";
+import { useTheme } from "../context/ThemeContext";
 import { CHALLENGES, computeProgress, iconForLevel, loadStats, resetStats, ChallengeStats } from "../utils/challenges";
 
 /* ------------------------------------------------------------------
@@ -107,7 +107,7 @@ export default function ChallengesScreen() {
                     <Text style={styles.statsBadgeText}>{completedItems.length} / {items.length}</Text>
                 </View>
             </View>
-            <View style={styles.summaryDivider} />
+            <View style={[styles.summaryDivider, darkMode && { backgroundColor: "#1F2937" }]} />
             <Text style={[styles.summaryFooter, darkMode && styles.subTextOnDark]}>
                 You have completed <Text style={{fontWeight: '900', color: '#6366f1'}}>{completedItems.length}</Text> challenges so far.
             </Text>
@@ -137,7 +137,7 @@ function ChallengeItem({ c, p, darkMode, isDone }: any) {
     return (
         <View style={[styles.challengeCard, darkMode && styles.cardDark, isDone && (darkMode ? styles.cardDoneDark : styles.cardDone)]}>
             <View style={styles.row}>
-                <View style={[styles.iconBox, darkMode && styles.iconBoxDark, isDone && styles.iconBoxDone]}>
+                <View style={[styles.iconBox, darkMode && styles.iconBoxDark, isDone && (darkMode ? styles.cardDoneDark : styles.iconBoxDone)]}>
                     <Ionicons name={isDone ? "checkmark" : iconForLevel(c.level) as any} size={22} color={isDone ? "#10b981" : "#6366f1"} />
                 </View>
                 <View style={{ flex: 1, marginLeft: 15 }}>

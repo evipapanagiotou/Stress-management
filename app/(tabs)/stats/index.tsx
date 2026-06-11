@@ -481,7 +481,7 @@ const stressTrend = useMemo(() => {
             style={[styles.analyticsButton, darkMode && styles.analyticsButtonDark]}
             activeOpacity={0.9}
           >
-            <View style={styles.analyticsIcon}>
+            <View style={[styles.analyticsIcon, darkMode && { backgroundColor: "rgba(99,102,241,0.15)" }]}>
               <Ionicons name="analytics-outline" size={22} color="#4F46E5" />
             </View>
             <View style={{ flex: 1 }}>
@@ -554,7 +554,7 @@ const stressTrend = useMemo(() => {
         <View style={[styles.card, darkMode && styles.cardDark, { marginBottom: 20 }]}>
           <View style={styles.rowBetween}>
             <Text style={[styles.cardTitle, darkMode && styles.textOnDark]}>Daily Study Goal</Text>
-            <TouchableOpacity onPress={() => setGoalModalOpen(true)} style={styles.editBtn}>
+            <TouchableOpacity onPress={() => setGoalModalOpen(true)} style={[styles.editBtn, darkMode && { backgroundColor: "#1F2937" }]}>
               <Ionicons name="pencil" size={14} color="#6366f1" />
             </TouchableOpacity>
           </View>
@@ -608,7 +608,7 @@ const stressTrend = useMemo(() => {
                   key={`${item.subjectId ?? item.title}-${index}`}
                   style={[styles.subjectStatCard, darkMode && styles.subjectStatCardDark]}
                 >
-                  <View style={styles.subjectStatIconWrap}>
+                  <View style={[styles.subjectStatIconWrap, darkMode && { backgroundColor: "#1e293b" }]}>
                     <View style={styles.subjectStatDot} />
                   </View>
 
@@ -651,13 +651,17 @@ const stressTrend = useMemo(() => {
                 return (
                   <TouchableOpacity
                     key={m.label}
-                    onPress={() => {
+                    onPress={async () => {
                       const updated = [
                         ...moodLog.filter((x) => x.date !== todayKey),
                         { date: todayKey, mood: m.label },
                       ];
                       setMoodLog(updated);
-                      AsyncStorage.setItem(MOOD_LOG_KEY, JSON.stringify(updated));
+                      try {
+                        await AsyncStorage.setItem(MOOD_LOG_KEY, JSON.stringify(updated));
+                      } catch (e) {
+                        console.error("Failed to save mood", e);
+                      }
                     }}
                     style={[styles.moodItem, active && styles.moodItemActive]}
                     activeOpacity={0.85}
@@ -693,7 +697,7 @@ const stressTrend = useMemo(() => {
         {/* 5. Weekly Consistency */}
         <View style={[styles.card, darkMode && styles.cardDark]}>
           <View style={styles.historyNavRow}>
-            <TouchableOpacity onPress={() => changeWeek(-1)} style={styles.navBtn} activeOpacity={0.85}>
+            <TouchableOpacity onPress={() => changeWeek(-1)} style={[styles.navBtn, darkMode && { backgroundColor: "rgba(99,102,241,0.15)" }]} activeOpacity={0.85}>
               <Ionicons name="chevron-back" size={20} color="#6366f1" />
             </TouchableOpacity>
 
@@ -708,7 +712,7 @@ const stressTrend = useMemo(() => {
               </Text>
             </View>
 
-            <TouchableOpacity onPress={() => changeWeek(1)} style={styles.navBtn} activeOpacity={0.85}>
+            <TouchableOpacity onPress={() => changeWeek(1)} style={[styles.navBtn, darkMode && { backgroundColor: "rgba(99,102,241,0.15)" }]} activeOpacity={0.85}>
               <Ionicons name="chevron-forward" size={20} color="#6366f1" />
             </TouchableOpacity>
           </View>
@@ -841,10 +845,10 @@ function GoalModal({ visible, initialMinutes, onClose, onSave, darkMode }: any) 
           <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
             <TouchableOpacity
               onPress={onClose}
-              style={[modalStyles.btn, { backgroundColor: "#F1F5F9" }]}
+              style={[modalStyles.btn, { backgroundColor: darkMode ? "#1F2937" : "#F1F5F9" }]}
               activeOpacity={0.85}
             >
-              <Text style={{ color: "#1E293B", fontWeight: "900" }}>Cancel</Text>
+              <Text style={{ color: darkMode ? "#E5E7EB" : "#1E293B", fontWeight: "900" }}>Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

@@ -17,12 +17,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import { exportAllData } from "../../services/csv-export";
 import { logout } from "../../services/auth-service";
-import { getExams, getReflections, getStressEntries } from "../../utils/storage";
-
+import { cancelAllNotifications } from "../../services/notification-service";
 // Storage Keys (settings)
 const KEY_NOTIFICATIONS = "@settings_notifs";
 const KEY_SOUND = "@settings_sound";
-const POMO_SESSIONS_KEY = "POMO_SESSIONS_V1";
 
 export default function ColorfulSettings() {
   const router = useRouter();
@@ -60,14 +58,7 @@ export default function ColorfulSettings() {
 
   const handleExportData = async () => {
     try {
-      const rawSessions = await AsyncStorage.getItem(POMO_SESSIONS_KEY);
-      const result = await exportAllData({
-        exams: await getExams(),
-        stressEntries: await getStressEntries(),
-        reflections: await getReflections(),
-        pomodoroSessions: rawSessions ? JSON.parse(rawSessions) : [],
-      });
-      if (!result.success) Alert.alert("Export failed", result.error);
+      await exportAllData();
     } catch (e) {
       console.error("Failed to export data", e);
       Alert.alert("Export failed", "Could not export the app data.");
@@ -76,7 +67,7 @@ export default function ColorfulSettings() {
 
   const handleLogout = async () => {
     const result = await logout();
-    if (result.success) router.push("/auth/login");
+    if (result.success) router.replace("/auth/login");
     else Alert.alert("Sign out failed", result.error);
   };
 
@@ -92,17 +83,20 @@ export default function ColorfulSettings() {
           style: "destructive",
           onPress: async () => {
             try {
+              const logoutResult = await logout();
+              if (!logoutResult.success) {
+                Alert.alert("Sign out failed", logoutResult.error ?? "Could not sign out. Try again.");
+                return;
+              }
+              await cancelAllNotifications();
               await AsyncStorage.clear();
 
               // Reset local toggles so UI doesn't flash old values
               setNotifications(true);
               setSoundEnabled(true);
 
-              // Optional: reset theme to light (only if you want)
-              // setDarkMode(false);
-
-              // Go back to the start screen (index / breathing)
-              router.replace("/"); // or "/(tabs)/home"
+              // Go back to the start screen
+              router.replace("/auth/login");
             } catch (e) {
               console.error("Failed to clear app data", e);
               Alert.alert("Error", "Could not clear data. Please try again.");
@@ -122,7 +116,7 @@ export default function ColorfulSettings() {
 
       <SafeAreaView style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 18 }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, darkMode && { backgroundColor: "#1e293b" }]}>
             <Ionicons name="chevron-back" size={24} color="#4338ca" />
           </TouchableOpacity>
 
@@ -157,7 +151,7 @@ export default function ColorfulSettings() {
           <View style={[styles.settingsGroup, darkMode && styles.darkGroup]}>
             <View style={styles.settingRow}>
               <View style={styles.leftSide}>
-                <View style={[styles.iconCircle, { backgroundColor: "#E0E7FF" }]}>
+                <View style={[styles.iconCircle, { backgroundColor: darkMode ? "#1e293b" : "#E0E7FF" }]}>
                   <Ionicons name="notifications" size={20} color="#4338ca" />
                 </View>
 
@@ -171,11 +165,11 @@ export default function ColorfulSettings() {
               />
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, darkMode && { backgroundColor: "#475569" }]} />
 
             <View style={styles.settingRow}>
               <View style={styles.leftSide}>
-                <View style={[styles.iconCircle, { backgroundColor: "#FEF3C7" }]}>
+                <View style={[styles.iconCircle, { backgroundColor: darkMode ? "#1e293b" : "#FEF3C7" }]}>
                   <Ionicons name="volume-high" size={20} color="#D97706" />
                 </View>
 
@@ -189,12 +183,12 @@ export default function ColorfulSettings() {
               />
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, darkMode && { backgroundColor: "#475569" }]} />
 
             <View style={styles.settingRow}>
               <View style={styles.leftSide}>
-                <View style={[styles.iconCircle, { backgroundColor: "#F1F5F9" }]}>
-                  <Ionicons name="moon" size={20} color="#1E293B" />
+                <View style={[styles.iconCircle, { backgroundColor: darkMode ? "#1e293b" : "#F1F5F9" }]}>
+                  <Ionicons name="moon" size={20} color={darkMode ? "#E5E7EB" : "#1E293B"} />
                 </View>
 
                 <Text style={[styles.settingText, darkMode && { color: "#fff" }]}>Dark Mode</Text>
@@ -207,11 +201,11 @@ export default function ColorfulSettings() {
               />
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, darkMode && { backgroundColor: "#475569" }]} />
 
             <TouchableOpacity style={styles.settingRow} onPress={() => router.push("/settings/notifications")}>
               <View style={styles.leftSide}>
-                <View style={[styles.iconCircle, { backgroundColor: "#DCFCE7" }]}>
+                <View style={[styles.iconCircle, { backgroundColor: darkMode ? "#1e293b" : "#DCFCE7" }]}>
                   <Ionicons name="alarm-outline" size={20} color="#15803D" />
                 </View>
 
@@ -223,7 +217,7 @@ export default function ColorfulSettings() {
           </View>
 
           <TouchableOpacity
-            style={[styles.clearBtn, darkMode && styles.darkClearBtn]}
+            style={[styles.clearBtn, darkMode && { backgroundColor: "#1e293b", borderColor: "#334155" }]}
             onPress={handleExportData}
             activeOpacity={0.9}
           >
@@ -232,7 +226,7 @@ export default function ColorfulSettings() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.clearBtn, darkMode && styles.darkClearBtn]}
+            style={[styles.clearBtn, darkMode && { backgroundColor: "#1e293b", borderColor: "#334155" }]}
             onPress={() => router.push("/auth/login")}
             activeOpacity={0.9}
           >
@@ -241,17 +235,16 @@ export default function ColorfulSettings() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.clearBtn, darkMode && styles.darkClearBtn]}
+            style={[styles.clearBtn, darkMode && { backgroundColor: "#1e293b", borderColor: "#334155" }]}
             onPress={handleLogout}
             activeOpacity={0.9}
           >
-            <Ionicons name="log-out-outline" size={20} color="#64748B" />
-            <Text style={[styles.clearText, { color: "#64748B" }]}>Sign Out</Text>
+            <Ionicons name="log-out-outline" size={20} color={darkMode ? "#94A3B8" : "#64748B"} />
+            <Text style={[styles.clearText, { color: darkMode ? "#94A3B8" : "#64748B" }]}>Sign Out</Text>
           </TouchableOpacity>
 
-          {/* ✅ Clear All Data button */}
           <TouchableOpacity
-            style={[styles.clearBtn, darkMode && styles.darkClearBtn]}
+            style={[styles.clearBtn, darkMode && { backgroundColor: "#1e293b", borderColor: "#450a0a" }]}
             onPress={handleClearAllData}
             activeOpacity={0.9}
           >

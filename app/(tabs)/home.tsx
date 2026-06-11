@@ -21,6 +21,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import LottieView from "lottie-react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "../../context/ThemeContext";
 
 import { getExams, Exam } from "../../utils/storage";
 import {
@@ -35,7 +36,6 @@ import {
 const { width } = Dimensions.get("window");
 const sx = StyleSheet.flatten;
 
-const KEY_DARK_MODE = "@settings_darkmode";
 const TODAY_PROGRESS_KEY = "todayProgress:v1";
 const MOOD_LOG_KEY = "MOOD_LOG";
 
@@ -124,9 +124,9 @@ export default function RefinedHomeScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
+  const { darkMode: isDarkMode } = useTheme();
 
   const [exams, setExams] = useState<Exam[]>([]);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const [hasOpenedBefore, setHasOpenedBefore] = useState(false);
   const [justOnboarded, setJustOnboarded] = useState(false);
@@ -149,7 +149,7 @@ export default function RefinedHomeScreen() {
   const [savingName, setSavingName] = useState(false);
 
   const colors = {
-    bg: isDarkMode ? (["#020617", "#0f172a"] as const) : (["#F8FAFC", "#F1F5F9"] as const),
+    bg: isDarkMode ? (["#0B1220", "#0f172a"] as const) : (["#F8FAFC", "#F1F5F9"] as const),
     card: isDarkMode ? "#1e293b" : "#ffffff",
     text: isDarkMode ? "#f8fafc" : "#0f172a",
     subText: isDarkMode ? "#94a3b8" : "#64748b",
@@ -192,7 +192,6 @@ export default function RefinedHomeScreen() {
 
   const loadAppData = useCallback(async () => {
     try {
-      const savedDark = await AsyncStorage.getItem(KEY_DARK_MODE);
       const rawProgress = await AsyncStorage.getItem(TODAY_PROGRESS_KEY);
       const rawMoodLog = await AsyncStorage.getItem(MOOD_LOG_KEY);
 
@@ -200,11 +199,12 @@ export default function RefinedHomeScreen() {
       setHasOpenedBefore(opened === "true");
       setJustOnboarded(false);
 
-      setIsDarkMode(savedDark === "true");
       setExams(await getExams());
       setMoodLog(safeParseArray<MoodLogEntry>(rawMoodLog));
 
-      if (rawProgress) setTodayProgress(JSON.parse(rawProgress));
+      if (rawProgress) {
+        try { setTodayProgress(JSON.parse(rawProgress)); } catch { /* corrupted key, skip */ }
+      }
 
       const savedFirst = (await AsyncStorage.getItem(KEY_FIRST)) || "";
       const savedLast = (await AsyncStorage.getItem(KEY_LAST)) || "";
@@ -308,7 +308,7 @@ export default function RefinedHomeScreen() {
   }, [challengeStats]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? "#0B1220" : "#F8FAFC" }}>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <LinearGradient colors={colors.bg} style={StyleSheet.absoluteFillObject} />
 
@@ -325,9 +325,10 @@ export default function RefinedHomeScreen() {
                   <Text style={sx([styles.welcomeText, { color: colors.subText }])}>
                     {justOnboarded ? "Welcome," : hasOpenedBefore ? "Welcome back," : "Welcome,"}
                   </Text>
-<Text style={sx([styles.nameText, { color: colors.text }])}>
-  {firstName || "Student"} 👋
-</Text>                </View>
+                  <Text style={sx([styles.nameText, { color: colors.text }])}>
+                    {firstName || "Student"} 👋
+                  </Text>
+                </View>
 
                 <Link href="/settings" asChild>
                   <TouchableOpacity
@@ -377,7 +378,7 @@ export default function RefinedHomeScreen() {
                   )}
 
                   {upNextExams.length > 0 && (
-                    <TouchableOpacity activeOpacity={0.9} onPress={() => router.push("/calendar")}>
+                    <TouchableOpacity activeOpacity={0.9} onPress={() => router.push("/(tabs)/calendar")}>
                       <View style={styles.heroNextBox}>
                         <View style={styles.heroNextHeader}>
                           <Text style={styles.heroNextLabel}>UP NEXT</Text>
@@ -423,8 +424,9 @@ export default function RefinedHomeScreen() {
                 icon="timer"
                 color="#EEF2FF"
                 iColor="#6366f1"
-                href="/pomodoro"
+                href="/(tabs)/pomodoro"
                 colors={colors}
+                darkMode={isDarkMode}
               />
               <BigTile
                 title="Calendar"
@@ -432,8 +434,9 @@ export default function RefinedHomeScreen() {
                 icon="calendar"
                 color="#FFF7ED"
                 iColor="#F59E0B"
-                href="/calendar"
+                href="/(tabs)/calendar"
                 colors={colors}
+                darkMode={isDarkMode}
               />
               <BigTile
                 title="Analytics"
@@ -441,8 +444,9 @@ export default function RefinedHomeScreen() {
                 icon="analytics"
                 color="#F0FDF4"
                 iColor="#22C55E"
-                href="/stats"
+                href="/(tabs)/stats"
                 colors={colors}
+                darkMode={isDarkMode}
               />
               <BigTile
                 title="Games"
@@ -452,6 +456,7 @@ export default function RefinedHomeScreen() {
                 iColor="#EF4444"
                 href="/games"
                 colors={colors}
+                darkMode={isDarkMode}
               />
             </View>
 
@@ -469,7 +474,7 @@ export default function RefinedHomeScreen() {
                   <Text style={styles.progressLab}>Study Time</Text>
                 </View>
 
-                <View style={styles.vDivider} />
+                <View style={[styles.vDivider, isDarkMode && { backgroundColor: "#334155" }]} />
 
                 <View style={styles.progressItem}>
                   <Text style={sx([styles.progressVal, { color: "#a855f7" }])}>
@@ -478,7 +483,7 @@ export default function RefinedHomeScreen() {
                   <Text style={styles.progressLab}>Sessions</Text>
                 </View>
 
-                <View style={styles.vDivider} />
+                <View style={[styles.vDivider, isDarkMode && { backgroundColor: "#334155" }]} />
 
                 <View style={styles.progressItem}>
                   <Text style={sx([styles.progressVal, { color: "#22C55E" }])}>
@@ -491,11 +496,11 @@ export default function RefinedHomeScreen() {
 
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() => router.push("/stats")}
+              onPress={() => router.push("/(tabs)/stats")}
               style={sx([styles.moodCard, { backgroundColor: colors.card, borderColor: colors.border }])}
             >
               <View style={styles.moodLeft}>
-                <View style={styles.moodIcon}>
+                <View style={[styles.moodIcon, isDarkMode && { backgroundColor: "#1e293b" }]}>
                   <Text style={styles.moodEmoji}>{moodEmoji(todayMood)}</Text>
                 </View>
 
@@ -538,11 +543,11 @@ export default function RefinedHomeScreen() {
                     ])}
                   >
                     <View style={styles.challengeCardTop}>
-                      <View style={sx([styles.challengeIconBox, { backgroundColor: "#EEF2FF" }])}>
+                      <View style={sx([styles.challengeIconBox, { backgroundColor: isDarkMode ? "#1e293b" : "#EEF2FF" }])}>
                         <Ionicons name={iconForLevel(item.level) as any} size={20} color={colors.accent} />
                       </View>
 
-                      <View style={styles.pctPill}>
+                      <View style={[styles.pctPill, isDarkMode && { backgroundColor: "#1e293b" }]}>
                         <Text style={styles.pctPillText}>{pct}%</Text>
                       </View>
                     </View>
@@ -555,7 +560,7 @@ export default function RefinedHomeScreen() {
                       {item.progress.currentText}
                     </Text>
 
-                    <View style={styles.barTrack}>
+                    <View style={[styles.barTrack, isDarkMode && { backgroundColor: "#334155" }]}>
                       <View style={sx([styles.barFill, { width: `${Math.max(6, item.progress.ratio * 100)}%` }])} />
                     </View>
 
@@ -590,14 +595,14 @@ export default function RefinedHomeScreen() {
   );
 }
 
-function BigTile({ title, subtitle, icon, color, iColor, href, colors }: any) {
+function BigTile({ title, subtitle, icon, color, iColor, href, colors, darkMode }: any) {
   return (
     <Link href={href} asChild>
       <TouchableOpacity
         style={sx([styles.bigTile, { backgroundColor: colors.card, borderColor: colors.border }])}
         activeOpacity={0.9}
       >
-        <View style={sx([styles.bigTileIcon, { backgroundColor: color }])}>
+        <View style={sx([styles.bigTileIcon, { backgroundColor: darkMode ? "#1e293b" : color }])}>
           <Ionicons name={icon as any} size={32} color={iColor} />
         </View>
         <Text style={sx([styles.bigTileTitle, { color: colors.text }])}>{title}</Text>

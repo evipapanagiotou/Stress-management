@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "../../context/ThemeContext";
 import {
   analyzeStressStudyCorrelation,
   studyEfficiencyScore,
@@ -60,6 +61,15 @@ function getCorrelationStrength(value: number | null) {
 export default function AnalyticsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { darkMode } = useTheme();
+
+  const bgColors = darkMode
+    ? (["#0B1220", "#0f172a"] as const)
+    : (["#F8FAFC", "#EEF2FF"] as const);
+  const cardBg = darkMode ? "#1e293b" : "#ffffff";
+  const cardBorder = darkMode ? "#334155" : "#E2E8F0";
+  const textPrimary = darkMode ? "#f1f5f9" : "#111827";
+  const textSecondary = darkMode ? "#94a3b8" : "#64748B";
 
   const [stressEntries, setStressEntries] = useState<StressEntry[]>([]);
   const [sessions, setSessions] = useState<PomodoroSession[]>([]);
@@ -120,16 +130,19 @@ export default function AnalyticsScreen() {
   }, [weekly.count, weeklyAverage, efficiency.score, efficiency.sessions]);
 
   return (
-    <LinearGradient colors={["#F8FAFC", "#EEF2FF"]} style={styles.bg}>
+    <LinearGradient colors={bgColors} style={styles.bg}>
       <SafeAreaView style={styles.safe}>
         <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-            <Ionicons name="chevron-back" size={22} color="#1F2937" />
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={[styles.iconButton, { backgroundColor: cardBg }]}
+          >
+            <Ionicons name="chevron-back" size={22} color={textPrimary} />
           </TouchableOpacity>
 
           <View style={{ alignItems: "center" }}>
-            <Text style={styles.headerTitle}>Analytics</Text>
-            <Text style={styles.headerSub}>Stress & study insights</Text>
+            <Text style={[styles.headerTitle, { color: textPrimary }]}>Analytics</Text>
+            <Text style={[styles.headerSub, { color: textSecondary }]}>Stress & study insights</Text>
           </View>
 
           <View style={styles.iconButtonGhost} />
@@ -137,71 +150,71 @@ export default function AnalyticsScreen() {
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.grid}>
-            <View style={styles.card}>
-              <View style={styles.cardIcon}>
+            <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={[styles.cardIcon, { backgroundColor: darkMode ? "#1e293b" : "#EEF2FF" }]}>
                 <Ionicons name="pulse-outline" size={22} color="#4F46E5" />
               </View>
 
-              <Text style={styles.label}>Weekly Stress</Text>
+              <Text style={[styles.label, { color: textSecondary }]}>Weekly Stress</Text>
 
-              <Text style={styles.value}>
+              <Text style={[styles.value, { color: textPrimary }]}>
                 {weekly.count ? `${weekly.average}/5` : "No data"}
               </Text>
 
-              <Text style={styles.classification}>{stressLabel}</Text>
+              <Text style={[styles.classification, { color: textPrimary }]}>{stressLabel}</Text>
 
               <View style={styles.metaRow}>
-                <Ionicons name={trendIcon as any} size={16} color="#64748B" />
-                <Text style={styles.meta}>{weekly.count} check-ins</Text>
+                <Ionicons name={trendIcon as any} size={16} color={textSecondary} />
+                <Text style={[styles.meta, { color: textSecondary }]}>{weekly.count} check-ins</Text>
               </View>
             </View>
 
-            <View style={styles.card}>
-              <View style={[styles.cardIcon, { backgroundColor: "#ECFDF5" }]}>
+            <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={[styles.cardIcon, { backgroundColor: darkMode ? "#1e293b" : "#ECFDF5" }]}>
                 <Ionicons name="timer-outline" size={22} color="#0F766E" />
               </View>
 
-              <Text style={styles.label}>Study Efficiency</Text>
+              <Text style={[styles.label, { color: textSecondary }]}>Study Efficiency</Text>
 
-              <Text style={styles.value}>{efficiency.score}/100</Text>
+              <Text style={[styles.value, { color: textPrimary }]}>{efficiency.score}/100</Text>
 
-              <Text style={styles.classification}>{efficiencyLabel}</Text>
+              <Text style={[styles.classification, { color: textPrimary }]}>{efficiencyLabel}</Text>
 
-              <Text style={styles.meta}>{efficiency.sessions} sessions in 30 days</Text>
+              <Text style={[styles.meta, { color: textSecondary }]}>{efficiency.sessions} sessions in 30 days</Text>
             </View>
           </View>
 
-          <View style={styles.wideCard}>
-            <Text style={styles.label}>Stress and Study Relationship</Text>
+          <View style={[styles.wideCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <Text style={[styles.label, { color: textSecondary }]}>Stress and Study Relationship</Text>
 
-            <Text style={styles.correlation}>{correlationStrength}</Text>
+            <Text style={[styles.correlation, { color: textPrimary }]}>{correlationStrength}</Text>
 
-            <Text style={styles.correlationValue}>
+            <Text style={[styles.correlationValue, { color: textSecondary }]}>
               {correlation.correlation === null
                 ? "Correlation unavailable"
                 : `Correlation: ${correlation.correlation}`}
             </Text>
 
-            <Text style={styles.insight}>{correlation.insight}</Text>
+            <Text style={[styles.insight, { color: textSecondary }]}>{correlation.insight}</Text>
 
-            <Text style={styles.meta}>{correlation.dataPoints} matched study days</Text>
+            <Text style={[styles.meta, { color: textSecondary }]}>{correlation.dataPoints} matched study days</Text>
           </View>
 
-          <View style={styles.recommendationCard}>
+          <View style={[styles.recommendationCard, { backgroundColor: cardBg, borderColor: darkMode ? "#475569" : "#FED7AA" }]}>
             <View style={styles.recommendationHeader}>
-              <View style={styles.recommendationIcon}>
+              <View style={[styles.recommendationIcon, { backgroundColor: darkMode ? "#1e293b" : "#FFEDD5" }]}>
                 <Ionicons name="bulb-outline" size={20} color="#F59E0B" />
               </View>
 
-              <Text style={styles.recommendationTitle}>Weekly Recommendation</Text>
+              <Text style={[styles.recommendationTitle, { color: textPrimary }]}>Weekly Recommendation</Text>
             </View>
 
-            <Text style={styles.recommendationText}>{recommendation}</Text>
+            <Text style={[styles.recommendationText, { color: textSecondary }]}>{recommendation}</Text>
           </View>
 
-          <View style={styles.noteCard}>
-            <Ionicons name="information-circle-outline" size={18} color="#64748B" />
-            <Text style={styles.noteText}>
+          <View style={[styles.noteCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <Ionicons name="information-circle-outline" size={18} color={textSecondary} />
+            <Text style={[styles.noteText, { color: textSecondary }]}>
               These analytics are intended for self-monitoring and study reflection. They do not
               provide medical diagnosis.
             </Text>

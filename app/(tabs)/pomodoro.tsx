@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import { getExams, type Exam as StoredExam } from "../../utils/storage";
+import { recordStudySession } from "../../utils/challenges";
 
 type Phase = "focus" | "shortBreak" | "longBreak";
 
@@ -206,17 +207,12 @@ export default function PomodoroScreen() {
     }
   };
 
-  useEffect(() => {
-    loadExams();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   useFocusEffect(
-  React.useCallback(() => {
-    loadExams();
-    loadTodayPomodoroStats();
-  }, [])
-);
+    React.useCallback(() => {
+      loadExams();
+      loadTodayPomodoroStats();
+    }, [])
+  );
 
   /* ------------------------------------------
      Storage helpers
@@ -361,6 +357,12 @@ export default function PomodoroScreen() {
 
     sessionFinalizedRef.current = true;
     await appendFocusSession(session);
+
+    // Update challenge progress whenever a Pomodoro session ends
+    await recordStudySession({
+      minutes: actualMinutes,
+      subject: selectedSubjectTitleRef.current || undefined,
+    }).catch(() => {});
 
     sessionStartTsRef.current = null;
     interruptionsRef.current = 0;
@@ -624,7 +626,7 @@ export default function PomodoroScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, darkMode && { backgroundColor: "#0B1220" }]}>
       <StatusBar barStyle={darkMode ? "light-content" : "dark-content"} />
       <LinearGradient
         colors={darkMode ? ["#0B1220", "#111827"] : ["#EEF2FF", "#F8FAFC"]}

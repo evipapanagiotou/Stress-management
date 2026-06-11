@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { Audio } from "expo-av";
+import { useTheme } from "../../context/ThemeContext";
 
 /* ------------------------------------------------------------------ */
 /* Storage (optional logs)                                             */
@@ -105,6 +106,14 @@ const COLORS = [
 export default function ToolboxScreen() {
   const router = useRouter();
   const { width: W } = Dimensions.get("window");
+  const { darkMode } = useTheme();
+
+  const bg = darkMode ? "#0f172a" : "#ffffff";
+  const cardBg = darkMode ? "#1e293b" : "#ffffff";
+  const cardBorder = darkMode ? "#334155" : "#eef2f7";
+  const textPrimary = darkMode ? "#f1f5f9" : "#111111";
+  const textSecondary = darkMode ? "#94a3b8" : "#6b7280";
+  const iconBg = darkMode ? "#1e293b" : "#f3f4f6";
 
   const [mode, setMode] = useState<Mode>("home");
 
@@ -428,7 +437,7 @@ export default function ToolboxScreen() {
   // ---------------- HOME ----------------
   if (mode === "home") {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
         <LinearGradient
           colors={["#FAD1C6", "#F49B8C", "#F06A5E"]}
           style={styles.header}
@@ -446,7 +455,7 @@ export default function ToolboxScreen() {
 
           <View style={styles.headerContent}>
             <TouchableOpacity
-              onPress={() => (router.canGoBack() ? router.back() : router.push("/home"))}
+              onPress={() => (router.canGoBack() ? router.back() : router.push("/(tabs)/home"))}
               style={styles.navBtn}
             >
               <Ionicons name="chevron-back" size={22} color="#111" />
@@ -461,27 +470,35 @@ export default function ToolboxScreen() {
           </View>
         </LinearGradient>
 
-        <View style={styles.homeBody}>
-          <TouchableOpacity style={styles.bigCard} activeOpacity={0.9} onPress={() => setShowBreathChoice(true)}>
+        <View style={[styles.homeBody, { backgroundColor: bg }]}>
+          <TouchableOpacity
+            style={[styles.bigCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
+            activeOpacity={0.9}
+            onPress={() => setShowBreathChoice(true)}
+          >
             <View style={styles.cardRow}>
-              <View style={styles.cardIcon}>
+              <View style={[styles.cardIcon, { backgroundColor: iconBg }]}>
                 <Ionicons name="leaf-outline" size={34} color="#2563eb" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.cardTitle}>Breathing Exercise</Text>
-                <Text style={styles.cardSub}>Follow the rhythm to breathe deeply and relax</Text>
+                <Text style={[styles.cardTitle, { color: textPrimary }]}>Breathing Exercise</Text>
+                <Text style={[styles.cardSub, { color: textSecondary }]}>Follow the rhythm to breathe deeply and relax</Text>
               </View>
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.bigCard} activeOpacity={0.9} onPress={startBubbleGame}>
+          <TouchableOpacity
+            style={[styles.bigCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
+            activeOpacity={0.9}
+            onPress={startBubbleGame}
+          >
             <View style={styles.cardRow}>
-              <View style={styles.cardIcon}>
+              <View style={[styles.cardIcon, { backgroundColor: iconBg }]}>
                 <Ionicons name="apps-outline" size={34} color="#7c3aed" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.cardTitle}>Bubble Pop</Text>
-                <Text style={styles.cardSub}>Tap bubbles to pop them and level up</Text>
+                <Text style={[styles.cardTitle, { color: textPrimary }]}>Bubble Pop</Text>
+                <Text style={[styles.cardSub, { color: textSecondary }]}>Tap bubbles to pop them and level up</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -490,11 +507,11 @@ export default function ToolboxScreen() {
         {/* Breathing choice modal */}
         <Modal visible={showBreathChoice} transparent animationType="fade" onRequestClose={() => setShowBreathChoice(false)}>
           <View style={styles.modalOverlay}>
-            <View style={styles.sheet}>
+            <View style={[styles.sheet, darkMode && { backgroundColor: "#1e293b" }]}>
               <View style={styles.sheetHeader}>
-                <Text style={styles.sheetTitle}>Breathing Exercise</Text>
+                <Text style={[styles.sheetTitle, darkMode && { color: "#f1f5f9" }]}>Breathing Exercise</Text>
                 <TouchableOpacity onPress={() => setShowBreathChoice(false)} style={styles.sheetClose}>
-                  <Ionicons name="close" size={20} color="#111" />
+                  <Ionicons name="close" size={20} color={darkMode ? "#94a3b8" : "#111"} />
                 </TouchableOpacity>
               </View>
 
@@ -527,7 +544,7 @@ export default function ToolboxScreen() {
     const timerText = formatMMSS(sessionSecondsLeft);
 
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
         <LinearGradient
           colors={["#FAD1C6", "#F49B8C", "#F06A5E"]}
           style={styles.breathBg}
@@ -595,8 +612,8 @@ export default function ToolboxScreen() {
 
   // ---------------- BUBBLE POP ----------------
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={styles.bubbleHeader}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
+      <View style={[styles.bubbleHeader, { backgroundColor: bg }]}>
         <TouchableOpacity
           onPress={async () => {
             await saveLog({
@@ -617,7 +634,7 @@ export default function ToolboxScreen() {
           <Text style={styles.bubbleBackText}>Back</Text>
         </TouchableOpacity>
 
-        <Text style={styles.bubbleHeaderTitle}>Bubble Pop</Text>
+        <Text style={[styles.bubbleHeaderTitle, { color: textPrimary }]}>Bubble Pop</Text>
 
         <TouchableOpacity
           onPress={() => {
@@ -634,14 +651,14 @@ export default function ToolboxScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.bubbleStats}>
-        <Text style={styles.bubbleScoreText}>Score: {bubbleScore}</Text>
-        <Text style={styles.bubbleSubText}>Tap bubbles to pop them!</Text>
-        <Text style={styles.bubbleLevelText}>Level {level}</Text>
+      <View style={[styles.bubbleStats, { backgroundColor: bg }]}>
+        <Text style={[styles.bubbleScoreText, { color: textPrimary }]}>Score: {bubbleScore}</Text>
+        <Text style={[styles.bubbleSubText, { color: textSecondary }]}>Tap bubbles to pop them!</Text>
+        <Text style={[styles.bubbleLevelText, { color: textPrimary }]}>Level {level}</Text>
       </View>
 
       <View
-        style={styles.bubblePlayArea}
+        style={[styles.bubblePlayArea, { backgroundColor: darkMode ? "#0f172a" : "#f2f2f7" }]}
         onLayout={(e) => setPlayAreaH(e.nativeEvent.layout.height)}
       >
         {floatBubbles.map((b) => (
@@ -669,7 +686,7 @@ export default function ToolboxScreen() {
         ))}
       </View>
 
-      <View style={styles.bubbleFooter}>
+      <View style={[styles.bubbleFooter, { backgroundColor: bg }]}>
         <TouchableOpacity
           style={styles.finishBtn}
           activeOpacity={0.9}

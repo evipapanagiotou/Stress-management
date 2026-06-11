@@ -27,7 +27,7 @@ function AppStack() {
       <StatusBar style={darkMode ? "light" : "dark"} />
 
       {/* Ορισμός του Stack navigator */}
-      <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
+      <Stack screenOptions={{ headerShown: false, animation: "slide_from_right", contentStyle: { backgroundColor: darkMode ? "#0B1220" : "#F8FAFC" } }}>
         
         {/* Οθόνη αρχικής σελίδας */}
         <Stack.Screen name="index" />
