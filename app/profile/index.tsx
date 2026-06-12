@@ -86,13 +86,8 @@ export default function ProfileScreen() {
     const f = firstName.trim();
     const l = lastName.trim();
 
-    // ✅ Require BOTH
     if (!f) {
       Alert.alert("Required", "Please enter your first name.");
-      return;
-    }
-    if (!l) {
-      Alert.alert("Required", "Please enter your last name.");
       return;
     }
 

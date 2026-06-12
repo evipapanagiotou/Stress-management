@@ -117,6 +117,9 @@ export async function suggestBreathingExercise(): Promise<void> {
   const notifsEnabled = await AsyncStorage.getItem("@settings_notifs");
   if (notifsEnabled === "false") return;
 
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== "granted") return;
+
   const lastSent = await AsyncStorage.getItem(BREATHING_COOLDOWN_KEY);
   if (lastSent && Date.now() - Number(lastSent) < BREATHING_COOLDOWN_MS) return;
 

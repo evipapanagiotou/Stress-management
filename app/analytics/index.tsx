@@ -47,6 +47,13 @@ function getStressLabel(avg: number | null) {
   return "Low";
 }
 
+function getStressColor(avg: number | null): string {
+  if (avg === null) return "#94a3b8";
+  if (avg <= 2) return "#EF4444";
+  if (avg <= 3.5) return "#F59E0B";
+  return "#22C55E";
+}
+
 function getCorrelationStrength(value: number | null) {
   if (value === null) return "Not enough paired data";
 
@@ -95,6 +102,7 @@ export default function AnalyticsScreen() {
 
   const weeklyAverage = weekly.count ? Number(weekly.average) : null;
   const stressLabel = getStressLabel(weeklyAverage);
+  const stressColor = getStressColor(weeklyAverage);
   const efficiencyLabel = getEfficiencyLabel(efficiency.score);
   const correlationStrength = getCorrelationStrength(correlation.correlation);
 
@@ -161,7 +169,7 @@ export default function AnalyticsScreen() {
                 {weekly.count ? `${weekly.average}/5` : "No data"}
               </Text>
 
-              <Text style={[styles.classification, { color: textPrimary }]}>{stressLabel}</Text>
+              <Text style={[styles.classification, { color: stressColor }]}>{stressLabel}</Text>
 
               <View style={styles.metaRow}>
                 <Ionicons name={trendIcon as any} size={16} color={textSecondary} />
