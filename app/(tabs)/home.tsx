@@ -36,7 +36,8 @@ import {
 const { width } = Dimensions.get("window");
 const sx = StyleSheet.flatten;
 
-const TODAY_PROGRESS_KEY = "todayProgress:v1";
+const POMO_LOG_KEY = "POMO_LOG";
+const POMO_SESSIONS_KEY = "POMO_SESSIONS_V1";
 const MOOD_LOG_KEY = "MOOD_LOG";
 
 const KEY_FIRST = "user:firstName";
@@ -192,7 +193,6 @@ export default function RefinedHomeScreen() {
 
   const loadAppData = useCallback(async () => {
     try {
-      const rawProgress = await AsyncStorage.getItem(TODAY_PROGRESS_KEY);
       const rawMoodLog = await AsyncStorage.getItem(MOOD_LOG_KEY);
 
       const opened = await AsyncStorage.getItem(KEY_HAS_OPENED_BEFORE);
@@ -201,10 +201,6 @@ export default function RefinedHomeScreen() {
 
       setExams(await getExams());
       setMoodLog(safeParseArray<MoodLogEntry>(rawMoodLog));
-
-      if (rawProgress) {
-        try { setTodayProgress(JSON.parse(rawProgress)); } catch { /* corrupted key, skip */ }
-      }
 
       const savedFirst = (await AsyncStorage.getItem(KEY_FIRST)) || "";
       const savedLast = (await AsyncStorage.getItem(KEY_LAST)) || "";
@@ -248,6 +244,23 @@ export default function RefinedHomeScreen() {
 
       const stats = await loadStats();
       setChallengeStats(stats);
+
+      const todayKey = getDayKey();
+      const rawPomoLog = await AsyncStorage.getItem(POMO_LOG_KEY);
+      const pomoLog: Array<{ ts: number; minutes: number }> = rawPomoLog ? JSON.parse(rawPomoLog) : [];
+      const todayStudyMinutes = pomoLog
+        .filter((e) => getDayKey(new Date(e.ts)) === todayKey)
+        .reduce((sum, e) => sum + (e.minutes || 0), 0);
+
+      const rawSessions = await AsyncStorage.getItem(POMO_SESSIONS_KEY);
+      const sessions: Array<{ startedAt: number; completed: boolean }> = rawSessions ? JSON.parse(rawSessions) : [];
+      const todaySessions = sessions.filter(
+        (s) => getDayKey(new Date(s.startedAt)) === todayKey && s.completed
+      ).length;
+
+      const challengesDone = CHALLENGES.filter((c) => computeProgress(c, stats).completed).length;
+
+      setTodayProgress({ studyMinutes: todayStudyMinutes, sessions: todaySessions, challengesDone });
     } catch (e) {
       console.log("Error loading data", e);
     }

@@ -180,7 +180,7 @@ export default function AnalyticsScreen() {
 
               <Text style={[styles.classification, { color: textPrimary }]}>{efficiencyLabel}</Text>
 
-              <Text style={[styles.meta, { color: textSecondary }]}>{efficiency.sessions} sessions in 30 days</Text>
+              <Text style={[styles.meta, { color: textSecondary }]}>{efficiency.sessions} sessions in 7 days</Text>
             </View>
           </View>
 
