@@ -119,6 +119,11 @@ export default function PomodoroScreen() {
   const selectedSubjectTitleRef = useRef<string>(selectedSubjectTitle);
   const autoStartNextPhaseRef = useRef(autoStartNextPhase);
   const soundEnabledRef = useRef(true);
+  useEffect(() => {
+    AsyncStorage.getItem("@settings_sound").then((v) => {
+      soundEnabledRef.current = v === null ? true : v === "true";
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     secondsLeftRef.current = secondsLeft;

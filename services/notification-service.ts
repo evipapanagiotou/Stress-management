@@ -110,7 +110,16 @@ export async function scheduleExamReminders(exams: Exam[]): Promise<void> {
   }
 }
 
+const BREATHING_COOLDOWN_KEY = "notif:breathing:lastSent";
+const BREATHING_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
+
 export async function suggestBreathingExercise(): Promise<void> {
+  const notifsEnabled = await AsyncStorage.getItem("@settings_notifs");
+  if (notifsEnabled === "false") return;
+
+  const lastSent = await AsyncStorage.getItem(BREATHING_COOLDOWN_KEY);
+  if (lastSent && Date.now() - Number(lastSent) < BREATHING_COOLDOWN_MS) return;
+
   await Notifications.scheduleNotificationAsync({
     content: {
       title: "High stress detected 😮‍💨",
@@ -119,6 +128,7 @@ export async function suggestBreathingExercise(): Promise<void> {
     },
     trigger: null,
   });
+  await AsyncStorage.setItem(BREATHING_COOLDOWN_KEY, String(Date.now()));
 }
 
 export async function cancelAllNotifications(): Promise<void> {

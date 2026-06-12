@@ -42,9 +42,9 @@ function getEfficiencyLabel(score: number) {
 
 function getStressLabel(avg: number | null) {
   if (avg === null) return "No data";
-  if (avg <= 2) return "Low";
+  if (avg <= 2) return "High";
   if (avg <= 3.5) return "Moderate";
-  return "High";
+  return "Low";
 }
 
 function getCorrelationStrength(value: number | null) {
@@ -110,15 +110,15 @@ export default function AnalyticsScreen() {
       return "Start by logging your mood and completing Pomodoro sessions. After a few days, the app will provide more meaningful insights.";
     }
 
-    if (weeklyAverage !== null && weeklyAverage >= 3.5 && efficiency.score < 60) {
+    if (weeklyAverage !== null && weeklyAverage <= 2 && efficiency.score < 60) {
       return "Stress appears elevated while study efficiency is low. Try shorter Pomodoro sessions and focus on completing small, manageable study blocks.";
     }
 
-    if (weeklyAverage !== null && weeklyAverage >= 3.5 && efficiency.score >= 75) {
+    if (weeklyAverage !== null && weeklyAverage <= 2 && efficiency.score >= 75) {
       return "Stress appears elevated, but study efficiency is good. Consider adding short relaxation breaks or stress-relief games between sessions.";
     }
 
-    if (weeklyAverage !== null && weeklyAverage <= 2 && efficiency.score >= 75) {
+    if (weeklyAverage !== null && weeklyAverage >= 3.5 && efficiency.score >= 75) {
       return "Your stress levels appear low and your study efficiency is strong. Keep maintaining consistent study habits.";
     }
 

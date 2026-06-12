@@ -9,6 +9,7 @@ import {
 import { db } from "./firebase";
 import { getCurrentUser } from "./auth-service";
 import type { Exam, ReflectionEntry, StressEntry } from "../utils/storage";
+import type { PomodoroSession } from "./analytics-utils";
 
 function userCol(sub: string) {
   const uid = getCurrentUser()?.uid;
@@ -50,6 +51,15 @@ export async function saveCloudReflection(entry: ReflectionEntry): Promise<void>
     await setDoc(ref, entry);
   } catch (e) {
     console.warn("[firestore] saveCloudReflection", e);
+  }
+}
+
+export async function addCloudPomoSession(session: PomodoroSession): Promise<void> {
+  try {
+    const ref = doc(userCol("pomodoro"), session.id);
+    await setDoc(ref, session);
+  } catch (e) {
+    console.warn("[firestore] addCloudPomoSession", e);
   }
 }
 
@@ -95,11 +105,23 @@ export async function fullSync(): Promise<void> {
     ];
     await AsyncStorage.setItem("unstressify:reflections", JSON.stringify(mergedRefl));
 
+    const pomoSnap = await getDocs(collection(db, "users", uid, "pomodoro"));
+    const cloudPomo = pomoSnap.docs.map((d) => d.data() as PomodoroSession);
+    const rawPomo = await AsyncStorage.getItem("POMO_SESSIONS_V1");
+    const localPomo: PomodoroSession[] = rawPomo ? JSON.parse(rawPomo) : [];
+    const localPomoIds = new Set(localPomo.map((s) => s.id));
+    const mergedPomo = [
+      ...localPomo,
+      ...cloudPomo.filter((s) => !localPomoIds.has(s.id)),
+    ];
+    await AsyncStorage.setItem("POMO_SESSIONS_V1", JSON.stringify(mergedPomo));
+
     // Push local data to cloud
     await Promise.all([
       ...localExams.map((e) => addCloudExam(e)),
       ...localStress.map((s) => addCloudStressEntry(s)),
       ...localRefl.map((r) => saveCloudReflection(r)),
+      ...localPomo.map((s) => addCloudPomoSession(s)),
     ]);
   } catch (e) {
     console.warn("[firestore] fullSync", e);

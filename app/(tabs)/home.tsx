@@ -163,7 +163,6 @@ export default function RefinedHomeScreen() {
     const l = lastDraft.trim();
 
     if (!f) return setNameError("Please enter your first name 🙂");
-    if (!l) return setNameError("Please enter your last name 🙂");
 
     setNameError(null);
     setSavingName(true);
@@ -207,7 +206,7 @@ export default function RefinedHomeScreen() {
       const savedFull = (await AsyncStorage.getItem(KEY_FULL)) || "";
       const savedLegacy = (await AsyncStorage.getItem(KEY_LEGACY)) || "";
 
-      if (savedFirst && savedLast) {
+      if (savedFirst) {
         setFirstName(savedFirst);
         setFirstDraft(savedFirst);
         setLastDraft(savedLast);
@@ -221,7 +220,7 @@ export default function RefinedHomeScreen() {
           setFirstDraft(first);
           setLastDraft(last);
 
-          if (!first || !last) {
+          if (!first) {
             setNeedsName(true);
           } else {
             const full = makeFull(first, last);

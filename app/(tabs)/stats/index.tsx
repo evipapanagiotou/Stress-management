@@ -121,7 +121,7 @@ export default function StatisticsScreen() {
   const [currentWeekStart, setCurrentWeekStart] = useState(getStartOfWeek(new Date()));
   const [selectedDayKey, setSelectedDayKey] = useState(toDayKey(new Date()));
 
-  const todayKey = useMemo(() => toDayKey(new Date()), []);
+  const todayKey = toDayKey(new Date());
 
   const loadAll = useCallback(async () => {
     try {
@@ -653,16 +653,19 @@ const stressTrend = useMemo(() => {
                   <TouchableOpacity
                     key={m.label}
                     onPress={async () => {
+                      const score = moodScore(m.label);
+                      if (score === 0) return;
+                      const dayKey = toDayKey(new Date());
                       const updated = [
-                        ...moodLog.filter((x) => x.date !== todayKey),
-                        { date: todayKey, mood: m.label },
+                        ...moodLog.filter((x) => x.date !== dayKey),
+                        { date: dayKey, mood: m.label },
                       ];
                       setMoodLog(updated);
                       try {
                         await AsyncStorage.setItem(MOOD_LOG_KEY, JSON.stringify(updated));
                         await upsertStressEntry({
-                          date: todayKey,
-                          level: moodScore(m.label) as 1 | 2 | 3 | 4 | 5,
+                          date: dayKey,
+                          level: score as 1 | 2 | 3 | 4 | 5,
                           createdAt: new Date().toISOString(),
                         });
                       } catch (e) {

@@ -43,7 +43,7 @@ export default function LoginScreen() {
         const full = name.trim();
         const parts = full.split(" ");
         const first = parts[0];
-        const last = parts.slice(1).join(" ") || parts[0];
+        const last = parts.slice(1).join(" ");
         await AsyncStorage.multiSet([
           ["user:name", full],
           ["userName", full],

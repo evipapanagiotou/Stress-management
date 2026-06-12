@@ -111,9 +111,9 @@ export function analyzeStressStudyCorrelation(
   const r = Math.round((num / den) * 100) / 100;
   const insight =
     r > 0.5
-      ? "More study time tends to increase your stress levels."
-      : r < -0.5
       ? "More study time tends to reduce your stress levels."
+      : r < -0.5
+      ? "More study time tends to increase your stress levels."
       : "No strong relationship found between study time and stress.";
 
   return { correlation: r, insight, dataPoints: n };
