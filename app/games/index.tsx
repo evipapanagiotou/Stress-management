@@ -517,7 +517,7 @@ export default function ToolboxScreen() {
 
               <TouchableOpacity
                 onPress={() => startBreathing("calming")}
-                style={[styles.choiceCard, { backgroundColor: "rgba(255,255,255,0.75)", borderColor: "#F06A5E" }]}
+                style={[styles.choiceCard, { backgroundColor: darkMode ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.75)", borderColor: "#F06A5E" }]}
                 activeOpacity={0.9}
               >
                 <Text style={styles.choiceTitle}>Calming Breathing</Text>
@@ -526,7 +526,7 @@ export default function ToolboxScreen() {
 
               <TouchableOpacity
                 onPress={() => startBreathing("box")}
-                style={[styles.choiceCard, { backgroundColor: "rgba(255,255,255,0.65)", borderColor: "#F49B8C" }]}
+                style={[styles.choiceCard, { backgroundColor: darkMode ? "rgba(30,41,59,0.8)" : "rgba(255,255,255,0.65)", borderColor: "#F49B8C" }]}
                 activeOpacity={0.9}
               >
                 <Text style={styles.choiceTitle}>Box Breathing</Text>

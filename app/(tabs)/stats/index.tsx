@@ -663,7 +663,7 @@ const stressTrend = useMemo(() => {
                         console.error("Failed to save mood", e);
                       }
                     }}
-                    style={[styles.moodItem, active && styles.moodItemActive]}
+                    style={[styles.moodItem, active && (darkMode ? styles.moodItemActiveDark : styles.moodItemActive)]}
                     activeOpacity={0.85}
                   >
                     <Text style={[styles.moodEmoji, active && { transform: [{ scale: 1.2 }] }]}>
@@ -1048,6 +1048,7 @@ const styles = StyleSheet.create({
   moodRow: { flexDirection: "row", justifyContent: "space-between" },
   moodItem: { alignItems: "center", padding: 8, borderRadius: 15 },
   moodItemActive: { backgroundColor: "#EEF2FF", borderWidth: 1, borderColor: "#6366f1" },
+  moodItemActiveDark: { backgroundColor: "rgba(99,102,241,0.2)", borderWidth: 1, borderColor: "#6366f1" },
   moodEmoji: { fontSize: 26, marginBottom: 4 },
   moodLabel: { fontSize: 9, fontWeight: "700", color: "#64748B" },
 

@@ -135,7 +135,7 @@ export default function AddExamScreen() {
                 style={[
                   styles.inputWrapper,
                   darkMode && styles.inputDark,
-                  focused === "subject" && styles.inputFocused,
+                  focused === "subject" && (darkMode ? styles.inputFocusedDark : styles.inputFocused),
                 ]}
               >
                 <Ionicons name="book" size={20} color="#6366f1" />
@@ -154,7 +154,7 @@ export default function AddExamScreen() {
                 style={[
                   styles.inputWrapper,
                   darkMode && styles.inputDark,
-                  focused === "location" && styles.inputFocused,
+                  focused === "location" && (darkMode ? styles.inputFocusedDark : styles.inputFocused),
                 ]}
               >
                 <Ionicons name="location" size={20} color={darkMode ? "#9CA3AF" : "#64748B"} />
@@ -420,6 +420,7 @@ const styles = StyleSheet.create({
     borderColor: "#1F2937",
   },
   inputFocused: { borderColor: "#6366f1", backgroundColor: "#fff" },
+  inputFocusedDark: { borderColor: "#6366f1", backgroundColor: "#0B1220" },
 
   textInput: { flex: 1, marginLeft: 12, fontSize: 16, fontWeight: "600", color: "#1E293B" },
 

@@ -305,7 +305,7 @@ const pressureLevel = useMemo(() => {
 
           <View style={[styles.loadCard, darkMode && styles.loadCardDark]}>
   <View style={styles.loadHeader}>
-    <View style={styles.loadIcon}>
+    <View style={[styles.loadIcon, darkMode && { backgroundColor: "rgba(99,102,241,0.15)" }]}>
       <Ionicons name="bar-chart-outline" size={20} color="#6366f1" />
     </View>
 
@@ -393,7 +393,7 @@ const pressureLevel = useMemo(() => {
                     </Text>
                   </View>
 
-                  <TouchableOpacity onPress={() => confirmDeleteExam(exam.id)} style={styles.deleteBtn}>
+                  <TouchableOpacity onPress={() => confirmDeleteExam(exam.id)} style={[styles.deleteBtn, darkMode && { backgroundColor: "rgba(239,68,68,0.15)" }]}>
                     <Ionicons name="trash-outline" size={18} color="#EF4444" />
                   </TouchableOpacity>
                 </View>
