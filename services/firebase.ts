@@ -1,14 +1,13 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// Placeholder credentials — Firestore calls will fail silently (caught in firestore-service.ts)
 const firebaseConfig = {
-  apiKey: "placeholder",
-  authDomain: "placeholder.firebaseapp.com",
-  projectId: "placeholder",
-  storageBucket: "placeholder.appspot.com",
-  messagingSenderId: "000000",
-  appId: "1:000000:web:000000",
+  apiKey: "AIzaSyDGbboqkN3W9qG6joWpxtq5UrRv-jFqLkI",
+  authDomain: "stress-management-app-349e2.firebaseapp.com",
+  projectId: "stress-management-app-349e2",
+  storageBucket: "stress-management-app-349e2.firebasestorage.app",
+  messagingSenderId: "661106311646",
+  appId: "1:661106311646:android:34561f4de341d592129d4f",
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
