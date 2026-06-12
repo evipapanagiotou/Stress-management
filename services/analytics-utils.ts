@@ -24,6 +24,8 @@ type EfficiencyScore = {
 
 type CorrelationResult = {
   correlation: number | null;
+  insight: string;
+  dataPoints: number;
 };
 
 export function weeklyStressSummary(entries: StressEntry[]): WeeklySummary {
@@ -88,7 +90,7 @@ export function analyzeStressStudyCorrelation(
     .filter((e) => studyByDay[e.date] !== undefined)
     .map((e) => ({ stress: e.level, minutes: studyByDay[e.date] }));
 
-  if (pairs.length < 4) return { correlation: null };
+  if (pairs.length < 4) return { correlation: null, insight: "", dataPoints: pairs.length };
 
   const n = pairs.length;
   const meanStress = pairs.reduce((a, p) => a + p.stress, 0) / n;
@@ -104,9 +106,17 @@ export function analyzeStressStudyCorrelation(
   }
 
   const den = Math.sqrt(denStress * denMinutes);
-  if (den === 0) return { correlation: null };
+  if (den === 0) return { correlation: null, insight: "", dataPoints: n };
 
-  return { correlation: Math.round((num / den) * 100) / 100 };
+  const r = Math.round((num / den) * 100) / 100;
+  const insight =
+    r > 0.5
+      ? "More study time tends to increase your stress levels."
+      : r < -0.5
+      ? "More study time tends to reduce your stress levels."
+      : "No strong relationship found between study time and stress.";
+
+  return { correlation: r, insight, dataPoints: n };
 }
 
 function toDateKey(d: Date): string {

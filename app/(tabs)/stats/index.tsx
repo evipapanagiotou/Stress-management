@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../../context/ThemeContext";
+import { CHALLENGE_STATS_KEY, CHALLENGES, ChallengeStats, computeProgress } from "../../../utils/challenges";
 
 /* ------------------------------------------
    Storage keys & Types
@@ -30,7 +31,6 @@ type PomoLogEntry = {
 
 type MoodLogEntry = { date: string; mood: string };
 type GameEntry = { createdAt: string; game: string };
-type ChallengeEntry = { date: string; completed: boolean };
 
 type PomoSession = {
   id: string;
@@ -47,7 +47,6 @@ const POMO_LOG_KEY = "POMO_LOG";
 const POMO_DAILY_GOAL_KEY = "POMO_DAILY_GOAL_MINUTES";
 const MOOD_LOG_KEY = "MOOD_LOG";
 const GAME_LOG_KEY = "stressGames:logs:v3";
-const CHALLENGES_KEY = "COMPLETED_CHALLENGES";
 const POMO_SESSIONS_KEY = "POMO_SESSIONS_V1";
 
 const MOODS = [
@@ -114,7 +113,7 @@ export default function StatisticsScreen() {
   const [pomoSessions, setPomoSessions] = useState<PomoSession[]>([]);
   const [moodLog, setMoodLog] = useState<MoodLogEntry[]>([]);
   const [gameLog, setGameLog] = useState<GameEntry[]>([]);
-  const [challenges, setChallenges] = useState<ChallengeEntry[]>([]);
+  const [challengeStats, setChallengeStats] = useState<ChallengeStats | null>(null);
   const [dailyGoalMin, setDailyGoalMin] = useState<number>(180);
   const [goalModalOpen, setGoalModalOpen] = useState(false);
 
@@ -131,14 +130,14 @@ export default function StatisticsScreen() {
           AsyncStorage.getItem(POMO_DAILY_GOAL_KEY),
           AsyncStorage.getItem(MOOD_LOG_KEY),
           AsyncStorage.getItem(GAME_LOG_KEY),
-          AsyncStorage.getItem(CHALLENGES_KEY),
+          AsyncStorage.getItem(CHALLENGE_STATS_KEY),
           AsyncStorage.getItem(POMO_SESSIONS_KEY),
         ]);
 
       setPomoLog(safeParseArray<PomoLogEntry>(rawPomo));
       setMoodLog(safeParseArray<MoodLogEntry>(rawMoods));
       setGameLog(safeParseArray<GameEntry>(rawGames));
-      setChallenges(safeParseArray<ChallengeEntry>(rawChallenges));
+      setChallengeStats(rawChallenges ? JSON.parse(rawChallenges) as ChallengeStats : null);
       setPomoSessions(safeParseArray<PomoSession>(rawSessions));
 
       const parsedGoal = rawGoal ? Number(rawGoal) : 180;
@@ -162,8 +161,9 @@ export default function StatisticsScreen() {
     const gamesCount = gameLog.filter((g) => toDayKey(new Date(g.createdAt)) === selectedDayKey)
       .length;
 
-    const challengesCount = challenges.filter((c) => c.date === selectedDayKey && c.completed)
-      .length;
+    const challengesCount = challengeStats
+      ? CHALLENGES.filter((c) => computeProgress(c, challengeStats).completed).length
+      : 0;
 
     const daySessions = pomoSessions.filter(
       (s) => toDayKey(new Date(s.startedAt)) === selectedDayKey
@@ -189,7 +189,7 @@ export default function StatisticsScreen() {
       focusedMinutes,
       totalSessionMinutes,
     };
-  }, [pomoLog, gameLog, challenges, pomoSessions, selectedDayKey]);
+  }, [pomoLog, gameLog, challengeStats, pomoSessions, selectedDayKey]);
 
   // ✅ ALL TIME subject totals - no percentages in UI
   const subjectStatsAllTime = useMemo(() => {
