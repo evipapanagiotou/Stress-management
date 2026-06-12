@@ -1,27 +1,16 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { initializeAuth, getReactNativePersistence, getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// TODO: Replace with real Firebase project credentials
-// Create a project at https://console.firebase.google.com
+// Placeholder credentials — Firestore calls will fail silently (caught in firestore-service.ts)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "placeholder",
+  authDomain: "placeholder.firebaseapp.com",
+  projectId: "placeholder",
+  storageBucket: "placeholder.appspot.com",
+  messagingSenderId: "000000",
+  appId: "1:000000:web:000000",
 };
 
-const isNew = !getApps().length;
-const app = isNew ? initializeApp(firebaseConfig) : getApp();
-
-// initializeAuth must only be called once; on hot-reload getAuth returns the existing instance
-export const auth = isNew
-  ? initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    })
-  : getAuth(app);
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const db = getFirestore(app);

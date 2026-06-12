@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { User } from "firebase/auth";
-import { subscribeToAuthState } from "../services/auth-service";
+import { subscribeToAuthState, type User } from "../services/auth-service";
 
 type AuthContextValue = {
   user: User | null;
