@@ -14,12 +14,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { registerWithEmail, resetPassword, signInWithEmail } from "../../services/auth-service";
 import { fullSync } from "../../services/firestore-service";
-import { getExams, getReflections, getStressEntries } from "../../utils/storage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const POMO_SESSIONS_KEY = "POMO_SESSIONS_V1";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -42,13 +39,19 @@ export default function LoginScreen() {
         : await signInWithEmail(email, password);
 
     if (result.success) {
-      const rawSessions = await AsyncStorage.getItem(POMO_SESSIONS_KEY);
-      await fullSync({
-        exams: await getExams(),
-        stressEntries: await getStressEntries(),
-        reflections: await getReflections(),
-        pomodoroSessions: rawSessions ? JSON.parse(rawSessions) : [],
-      }).catch((error) => console.warn("Initial sync failed", error));
+      if (mode === "register" && name.trim()) {
+        const full = name.trim();
+        const parts = full.split(" ");
+        const first = parts[0];
+        const last = parts.slice(1).join(" ") || parts[0];
+        await AsyncStorage.multiSet([
+          ["user:name", full],
+          ["userName", full],
+          ["user:firstName", first],
+          ["user:lastName", last],
+        ]).catch(() => {});
+      }
+      await fullSync().catch((error) => console.warn("Initial sync failed", error));
       router.replace("/(tabs)/home");
     } else {
       Alert.alert("Sign in failed", result.error);

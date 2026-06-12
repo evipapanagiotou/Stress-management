@@ -18,6 +18,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../../context/ThemeContext";
 import { CHALLENGE_STATS_KEY, CHALLENGES, ChallengeStats, computeProgress } from "../../../utils/challenges";
+import { upsertStressEntry } from "../../../utils/storage";
 
 /* ------------------------------------------
    Storage keys & Types
@@ -463,14 +464,14 @@ const stressTrend = useMemo(() => {
               <Text style={[styles.balanceVal, darkMode && styles.textOnDark]}>
                 {statsForSelected.challengesCount}
               </Text>
-              <Text style={styles.balanceLab}>Challenges</Text>
+              <Text style={styles.balanceLab}>Total Challenges</Text>
             </View>
          
 
           <View style={styles.balanceItem}>
   <Ionicons name="stats-chart" size={22} color="#8B5CF6" />
   <Text style={[styles.balanceVal, darkMode && styles.textOnDark]}>
-    {averageDailyStudyLast30}
+    {averageDailyStudyLast30}m
   </Text>
   <Text style={styles.balanceLab}>Avg/day</Text>
 </View>
@@ -659,6 +660,11 @@ const stressTrend = useMemo(() => {
                       setMoodLog(updated);
                       try {
                         await AsyncStorage.setItem(MOOD_LOG_KEY, JSON.stringify(updated));
+                        await upsertStressEntry({
+                          date: todayKey,
+                          level: moodScore(m.label) as 1 | 2 | 3 | 4 | 5,
+                          createdAt: new Date().toISOString(),
+                        });
                       } catch (e) {
                         console.error("Failed to save mood", e);
                       }

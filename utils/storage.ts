@@ -121,7 +121,7 @@ export async function upsertStressEntry(entry: StressEntry) {
     : [entry, ...all];
   await AsyncStorage.setItem(KEYS.STRESS, JSON.stringify(next));
   if (getCurrentUser()) addCloudStressEntry(entry).catch(console.warn);
-  if (entry.level >= 4) suggestBreathingExercise().catch(console.warn);
+  if (entry.level <= 2) suggestBreathingExercise().catch(console.warn);
 }
 
 /* ------------ Reflections -------------- */

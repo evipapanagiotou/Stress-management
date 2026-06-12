@@ -278,14 +278,21 @@ const pressureLevel = useMemo(() => {
               end={{ x: 1, y: 1 }}
               style={styles.countdownCard}
             >
-              <View style={styles.countdownInfo}>
-                <View style={styles.iconCircle}>
-                  <Ionicons name="hourglass-outline" size={20} color="#4F46E5" />
+              <View style={{ flex: 1 }}>
+                <View style={styles.countdownInfo}>
+                  <View style={styles.iconCircle}>
+                    <Ionicons name="hourglass-outline" size={20} color="#4F46E5" />
+                  </View>
+                  <View>
+                    <Text style={styles.countdownLabel}>NEXT EXAM</Text>
+                    <Text style={styles.countdownSubject}>{nextExamInfo.subject}</Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={styles.countdownLabel}>NEXT EXAM</Text>
-                  <Text style={styles.countdownSubject}>{nextExamInfo.subject}</Text>
-                </View>
+                {pressureLevel && (
+                  <View style={[styles.pressureBadge, { backgroundColor: pressureLevel.color }]}>
+                    <Text style={styles.pressureBadgeText}>{pressureLevel.label}</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.daysBadge}>
@@ -294,12 +301,6 @@ const pressureLevel = useMemo(() => {
                 </Text>
                 <Text style={styles.daysText}>{nextExamInfo.daysRemaining === 1 ? "day" : "days"}</Text>
               </View>
-
-              {pressureLevel && (
-  <View style={[styles.pressureBadge, { backgroundColor: pressureLevel.color }]}>
-    <Text style={styles.pressureBadgeText}>{pressureLevel.label}</Text>
-  </View>
-)}
             </LinearGradient>
           )}
 
