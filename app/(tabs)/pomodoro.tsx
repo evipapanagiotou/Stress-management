@@ -117,6 +117,8 @@ export default function PomodoroScreen() {
   const hasStartedSessionRef = useRef(hasStartedSession);
   const selectedSubjectIdRef = useRef<string | null>(selectedSubjectId);
   const selectedSubjectTitleRef = useRef<string>(selectedSubjectTitle);
+  const autoStartNextPhaseRef = useRef(autoStartNextPhase);
+  const soundEnabledRef = useRef(true);
 
   useEffect(() => {
     secondsLeftRef.current = secondsLeft;
@@ -134,6 +136,9 @@ export default function PomodoroScreen() {
     selectedSubjectIdRef.current = selectedSubjectId;
     selectedSubjectTitleRef.current = selectedSubjectTitle;
   }, [selectedSubjectId, selectedSubjectTitle]);
+  useEffect(() => {
+    autoStartNextPhaseRef.current = autoStartNextPhase;
+  }, [autoStartNextPhase]);
 
   const phaseUI = useMemo(() => {
     const settings = {
@@ -211,6 +216,9 @@ export default function PomodoroScreen() {
     React.useCallback(() => {
       loadExams();
       loadTodayPomodoroStats();
+      AsyncStorage.getItem("@settings_sound").then((v) => {
+        soundEnabledRef.current = v === null ? true : v === "true";
+      }).catch(() => {});
     }, [])
   );
 
@@ -392,7 +400,7 @@ export default function PomodoroScreen() {
           if (s <= 1) {
             stopTimer();
 
-            if (Platform.OS !== "web") {
+            if (Platform.OS !== "web" && soundEnabledRef.current) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
 
@@ -410,7 +418,7 @@ export default function PomodoroScreen() {
               setHasStartedSession(false);
               hasStartedSessionRef.current = false;
 
-              if (autoStartNextPhase) setPendingAutoStart(true);
+              if (autoStartNextPhaseRef.current) setPendingAutoStart(true);
             })();
 
             return 0;
@@ -474,7 +482,7 @@ export default function PomodoroScreen() {
       await finalizeFocusSessionOnce(false);
     }
 
-    if (Platform.OS !== "web") {
+    if (Platform.OS !== "web" && soundEnabledRef.current) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
@@ -496,7 +504,7 @@ export default function PomodoroScreen() {
       await finalizeFocusSessionOnce(false);
     }
 
-    if (Platform.OS !== "web") {
+    if (Platform.OS !== "web" && soundEnabledRef.current) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 

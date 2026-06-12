@@ -51,6 +51,9 @@ export default function ColorfulSettings() {
     setter(value);
     try {
       await AsyncStorage.setItem(key, String(value));
+      if (key === KEY_NOTIFICATIONS && !value) {
+        await cancelAllNotifications();
+      }
     } catch (e) {
       console.error("Failed to save setting", e);
     }
