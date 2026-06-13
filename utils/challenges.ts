@@ -141,7 +141,7 @@ export async function recordStudySession({
   date?: Date;
 }) {
   const mins = Math.max(0, Math.round(minutes));
-  if (!mins) return;
+  if (mins < 15) return;
 
   const day = getDayKey(date);
   const stats = await loadStats();
