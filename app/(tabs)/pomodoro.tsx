@@ -10,6 +10,7 @@ import {
   Switch,
   StatusBar,
   Platform,
+  AppState,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useKeepAwake } from "expo-keep-awake";
@@ -224,8 +225,27 @@ export default function PomodoroScreen() {
       AsyncStorage.getItem("@settings_sound").then((v) => {
         soundEnabledRef.current = v === null ? true : v === "true";
       }).catch(() => {});
+
+      // Save in-progress session when user switches to another tab
+      return () => {
+        if (phaseRef.current === "focus" && hasStartedSessionRef.current) {
+          flushFocusMinutes().then(() => finalizeFocusSessionOnce(false)).catch(() => {});
+        }
+      };
     }, [])
   );
+
+  // Flush partial minutes to POMO_LOG when app is backgrounded (home button / notification)
+  // Does NOT finalize the session so the timer can continue when the user returns
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if ((state === "background" || state === "inactive") &&
+          phaseRef.current === "focus" && hasStartedSessionRef.current) {
+        flushFocusMinutes().catch(() => {});
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   /* ------------------------------------------
      Storage helpers
