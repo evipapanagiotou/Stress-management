@@ -108,7 +108,8 @@ export async function fullSync(): Promise<void> {
     const pomoSnap = await getDocs(collection(db, "users", uid, "pomodoro"));
     const cloudPomo = pomoSnap.docs.map((d) => d.data() as PomodoroSession);
     const rawPomo = await AsyncStorage.getItem("POMO_SESSIONS_V1");
-    const localPomo: PomodoroSession[] = rawPomo ? JSON.parse(rawPomo) : [];
+    const parsedPomo = rawPomo ? JSON.parse(rawPomo) : [];
+    const localPomo: PomodoroSession[] = Array.isArray(parsedPomo) ? parsedPomo : [];
     const localPomoIds = new Set(localPomo.map((s) => s.id));
     const mergedPomo = [
       ...localPomo,

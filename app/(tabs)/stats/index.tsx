@@ -151,6 +151,8 @@ export default function StatisticsScreen() {
   useFocusEffect(
     useCallback(() => {
       loadAll();
+      setSelectedDayKey(toDayKey(new Date()));
+      setCurrentWeekStart(getStartOfWeek(new Date()));
     }, [loadAll])
   );
 
@@ -334,7 +336,7 @@ const moodInsight = useMemo(() => {
   if (avg <= 2) return "Stress levels appear elevated this week.";
   if (avg < 3.5) return "Mood appears stable this week.";
   return "Positive emotional state detected this week.";
-}, [moodLog]);
+}, [moodLog, todayKey]);
 
 const stressTrend = useMemo(() => {
   const getAverageForRange = (startOffset: number, endOffset: number) => {
@@ -389,7 +391,7 @@ const stressTrend = useMemo(() => {
     icon: "remove",
     description: "Mood levels appear relatively stable.",
   };
-}, [moodLog]);
+}, [moodLog, todayKey]);
 
   const changeWeek = (direction: number) => {
     setCurrentWeekStart((prev) => addDays(prev, direction * 7));
