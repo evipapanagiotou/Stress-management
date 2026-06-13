@@ -17,53 +17,58 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
 import { exportAllData } from "../../services/csv-export";
 import { logout } from "../../services/auth-service";
-import { cancelAllNotifications } from "../../services/notification-service";
-// Storage Keys (settings)
-const KEY_NOTIFICATIONS = "@settings_notifs";
+import {
+  cancelAllNotifications,
+  getNotificationPreferences,
+  registerForPushNotifications,
+  saveNotificationPreferences,
+  type NotificationPreferences,
+} from "../../services/notification-service";
+import { getExams } from "../../utils/storage";
+
 const KEY_SOUND = "@settings_sound";
 
-export default function ColorfulSettings() {
+export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-
-  const [notifications, setNotifications] = useState(true);
   const { darkMode, setDarkMode } = useTheme();
 
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
 
   useEffect(() => {
-    loadSettings();
+    (async () => {
+      const [savedSound, loadedPrefs] = await Promise.all([
+        AsyncStorage.getItem(KEY_SOUND),
+        getNotificationPreferences(),
+      ]);
+      if (savedSound !== null) setSoundEnabled(savedSound === "true");
+      setPrefs(loadedPrefs);
+    })();
   }, []);
 
-  const loadSettings = async () => {
-    try {
-      const savedNotifs = await AsyncStorage.getItem(KEY_NOTIFICATIONS);
-      const savedSound = await AsyncStorage.getItem(KEY_SOUND);
-
-      if (savedNotifs !== null) setNotifications(savedNotifs === "true");
-      if (savedSound !== null) setSoundEnabled(savedSound === "true");
-    } catch (e) {
-      console.error("Failed to load settings", e);
-    }
+  const toggleSound = async (value: boolean) => {
+    setSoundEnabled(value);
+    await AsyncStorage.setItem(KEY_SOUND, String(value));
   };
 
-  const toggleSetting = async (key: string, value: boolean, setter: (v: boolean) => void) => {
-    setter(value);
-    try {
-      await AsyncStorage.setItem(key, String(value));
-      if (key === KEY_NOTIFICATIONS && !value) {
-        await cancelAllNotifications();
-      }
-    } catch (e) {
-      console.error("Failed to save setting", e);
-    }
+  const updatePref = async (patch: Partial<NotificationPreferences>) => {
+    if (!prefs) return;
+    const next = { ...prefs, ...patch };
+    setPrefs(next);
+    await registerForPushNotifications();
+    await saveNotificationPreferences(next, await getExams());
+  };
+
+  const handleCancelReminders = async () => {
+    await cancelAllNotifications();
+    Alert.alert("Reminders cleared", "All scheduled reminders have been cancelled.");
   };
 
   const handleExportData = async () => {
     try {
       await exportAllData();
-    } catch (e) {
-      console.error("Failed to export data", e);
+    } catch {
       Alert.alert("Export failed", "Could not export the app data.");
     }
   };
@@ -74,7 +79,6 @@ export default function ColorfulSettings() {
     else Alert.alert("Sign out failed", result.error);
   };
 
-  // ✅ Clear All Data (full reset)
   const handleClearAllData = () => {
     Alert.alert(
       "Clear All Data",
@@ -93,15 +97,10 @@ export default function ColorfulSettings() {
               }
               await cancelAllNotifications();
               await AsyncStorage.clear();
-
-              // Reset local toggles so UI doesn't flash old values
-              setNotifications(true);
               setSoundEnabled(true);
-
-              // Go back to the start screen
+              setPrefs(null);
               router.replace("/auth/login");
-            } catch (e) {
-              console.error("Failed to clear app data", e);
+            } catch {
               Alert.alert("Error", "Could not clear data. Please try again.");
             }
           },
@@ -110,25 +109,33 @@ export default function ColorfulSettings() {
     );
   };
 
+  const dm = darkMode;
+  const cardBg = dm ? "#334155" : "#fff";
+  const textColor = dm ? "#fff" : "#1E293B";
+  const subTextColor = dm ? "#94A3B8" : "#64748B";
+  const dividerColor = dm ? "#475569" : "#F1F5F9";
+
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient
-        colors={darkMode ? ["#0F172A", "#1E293B"] : ["#EEF2FF", "#E0E7FF"]}
+        colors={dm ? ["#0F172A", "#1E293B"] : ["#EEF2FF", "#E0E7FF"]}
         style={StyleSheet.absoluteFillObject}
       />
 
       <SafeAreaView style={{ flex: 1 }}>
         <View style={[styles.header, { paddingTop: insets.top + 18 }]}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, darkMode && { backgroundColor: "#1e293b" }]}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={[styles.backButton, dm && { backgroundColor: "#1e293b" }]}
+          >
             <Ionicons name="chevron-back" size={24} color="#4338ca" />
           </TouchableOpacity>
-
-          <Text style={[styles.headerTitle, darkMode && { color: "#fff" }]}>Settings</Text>
-
+          <Text style={[styles.headerTitle, dm && { color: "#fff" }]}>Settings</Text>
           <View style={{ width: 44 }} />
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* Profile card */}
           <LinearGradient
             colors={["#6366f1", "#818cf8"]}
             start={{ x: 0, y: 0 }}
@@ -138,121 +145,154 @@ export default function ColorfulSettings() {
             <View style={styles.avatarPlaceholder}>
               <Ionicons name="person" size={30} color="#6366f1" />
             </View>
-
             <View style={styles.profileInfo}>
               <Text style={styles.userName}>Student Account</Text>
               <Text style={styles.userSub}>Manage your stress plan</Text>
             </View>
-
             <TouchableOpacity style={styles.editBtn} onPress={() => router.push("/profile")}>
               <Text style={styles.editBtnText}>Edit</Text>
             </TouchableOpacity>
           </LinearGradient>
 
+          {/* App Experience */}
           <Text style={styles.sectionLabel}>App Experience</Text>
-
-          <View style={[styles.settingsGroup, darkMode && styles.darkGroup]}>
+          <View style={[styles.settingsGroup, { backgroundColor: cardBg }]}>
             <View style={styles.settingRow}>
               <View style={styles.leftSide}>
-                <View style={[styles.iconCircle, { backgroundColor: darkMode ? "#1e293b" : "#E0E7FF" }]}>
-                  <Ionicons name="notifications" size={20} color="#4338ca" />
-                </View>
-
-                <Text style={[styles.settingText, darkMode && { color: "#fff" }]}>Notifications</Text>
-              </View>
-
-              <Switch
-                value={notifications}
-                onValueChange={(v) => toggleSetting(KEY_NOTIFICATIONS, v, setNotifications)}
-                trackColor={{ true: "#6366f1", false: "#CBD5E1" }}
-              />
-            </View>
-
-            <View style={[styles.divider, darkMode && { backgroundColor: "#475569" }]} />
-
-            <View style={styles.settingRow}>
-              <View style={styles.leftSide}>
-                <View style={[styles.iconCircle, { backgroundColor: darkMode ? "#1e293b" : "#FEF3C7" }]}>
+                <View style={[styles.iconCircle, { backgroundColor: dm ? "#1e293b" : "#FEF3C7" }]}>
                   <Ionicons name="volume-high" size={20} color="#D97706" />
                 </View>
-
-                <Text style={[styles.settingText, darkMode && { color: "#fff" }]}>Sounds</Text>
+                <Text style={[styles.settingText, { color: textColor }]}>Sounds</Text>
               </View>
-
               <Switch
                 value={soundEnabled}
-                onValueChange={(v) => toggleSetting(KEY_SOUND, v, setSoundEnabled)}
+                onValueChange={toggleSound}
                 trackColor={{ true: "#6366f1", false: "#CBD5E1" }}
               />
             </View>
 
-            <View style={[styles.divider, darkMode && { backgroundColor: "#475569" }]} />
+            <View style={[styles.divider, { backgroundColor: dividerColor }]} />
 
             <View style={styles.settingRow}>
               <View style={styles.leftSide}>
-                <View style={[styles.iconCircle, { backgroundColor: darkMode ? "#1e293b" : "#F1F5F9" }]}>
-                  <Ionicons name="moon" size={20} color={darkMode ? "#E5E7EB" : "#1E293B"} />
+                <View style={[styles.iconCircle, { backgroundColor: dm ? "#1e293b" : "#F1F5F9" }]}>
+                  <Ionicons name="moon" size={20} color={dm ? "#E5E7EB" : "#1E293B"} />
                 </View>
-
-                <Text style={[styles.settingText, darkMode && { color: "#fff" }]}>Dark Mode</Text>
+                <Text style={[styles.settingText, { color: textColor }]}>Dark Mode</Text>
               </View>
-
               <Switch
                 value={darkMode}
                 onValueChange={setDarkMode}
                 trackColor={{ true: "#6366f1", false: "#CBD5E1" }}
               />
             </View>
+          </View>
 
-            <View style={[styles.divider, darkMode && { backgroundColor: "#475569" }]} />
-
-            <TouchableOpacity style={styles.settingRow} onPress={() => router.push("/settings/notifications")}>
+          {/* Reminders */}
+          <Text style={styles.sectionLabel}>Reminders</Text>
+          <View style={[styles.settingsGroup, { backgroundColor: cardBg }]}>
+            <View style={styles.settingRow}>
               <View style={styles.leftSide}>
-                <View style={[styles.iconCircle, { backgroundColor: darkMode ? "#1e293b" : "#DCFCE7" }]}>
-                  <Ionicons name="alarm-outline" size={20} color="#15803D" />
+                <View style={[styles.iconCircle, { backgroundColor: dm ? "#1e293b" : "#ECFDF5" }]}>
+                  <Ionicons name="book-outline" size={20} color="#15803D" />
                 </View>
-
-                <Text style={[styles.settingText, darkMode && { color: "#fff" }]}>Reminder Preferences</Text>
+                <View>
+                  <Text style={[styles.settingText, { color: textColor }]}>Study Reminder</Text>
+                  <Text style={[styles.settingSub, { color: subTextColor }]}>Daily at 18:00</Text>
+                </View>
               </View>
+              <Switch
+                value={prefs?.studyReminder ?? false}
+                onValueChange={(v) => updatePref({ studyReminder: v })}
+                trackColor={{ true: "#6366f1", false: "#CBD5E1" }}
+              />
+            </View>
 
-              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
-            </TouchableOpacity>
+            <View style={[styles.divider, { backgroundColor: dividerColor }]} />
+
+            <View style={styles.settingRow}>
+              <View style={styles.leftSide}>
+                <View style={[styles.iconCircle, { backgroundColor: dm ? "#1e293b" : "#EEF2FF" }]}>
+                  <Ionicons name="happy-outline" size={20} color="#4338ca" />
+                </View>
+                <View>
+                  <Text style={[styles.settingText, { color: textColor }]}>Stress Check-ins</Text>
+                  <Text style={[styles.settingSub, { color: subTextColor }]}>Morning & evening prompts</Text>
+                </View>
+              </View>
+              <Switch
+                value={prefs?.stressCheckIns ?? false}
+                onValueChange={(v) => updatePref({ stressCheckIns: v })}
+                trackColor={{ true: "#6366f1", false: "#CBD5E1" }}
+              />
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: dividerColor }]} />
+
+            <View style={styles.settingRow}>
+              <View style={styles.leftSide}>
+                <View style={[styles.iconCircle, { backgroundColor: dm ? "#1e293b" : "#FFF7ED" }]}>
+                  <Ionicons name="calendar-outline" size={20} color="#C2410C" />
+                </View>
+                <View>
+                  <Text style={[styles.settingText, { color: textColor }]}>Exam Reminders</Text>
+                  <Text style={[styles.settingSub, { color: subTextColor }]}>1 & 3 days before exams</Text>
+                </View>
+              </View>
+              <Switch
+                value={prefs?.examReminders ?? false}
+                onValueChange={(v) => updatePref({ examReminders: v })}
+                trackColor={{ true: "#6366f1", false: "#CBD5E1" }}
+              />
+            </View>
           </View>
 
           <TouchableOpacity
-            style={[styles.clearBtn, darkMode && { backgroundColor: "#1e293b", borderColor: "#334155" }]}
+            style={[styles.actionBtn, { backgroundColor: cardBg, borderColor: dm ? "#7f1d1d" : "#FECACA" }]}
+            onPress={handleCancelReminders}
+            activeOpacity={0.9}
+          >
+            <Ionicons name="notifications-off-outline" size={20} color="#DC2626" />
+            <Text style={[styles.actionBtnText, { color: "#DC2626" }]}>Cancel scheduled reminders</Text>
+          </TouchableOpacity>
+
+          {/* Account */}
+          <Text style={[styles.sectionLabel, { marginTop: 8 }]}>Account</Text>
+
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: cardBg, borderColor: dm ? "#334155" : "#E2E8F0" }]}
             onPress={handleExportData}
             activeOpacity={0.9}
           >
             <Ionicons name="download-outline" size={20} color="#4F46E5" />
-            <Text style={[styles.clearText, { color: "#4F46E5" }]}>Export App Data</Text>
+            <Text style={[styles.actionBtnText, { color: "#4F46E5" }]}>Export App Data</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.clearBtn, darkMode && { backgroundColor: "#1e293b", borderColor: "#334155" }]}
+            style={[styles.actionBtn, { backgroundColor: cardBg, borderColor: dm ? "#334155" : "#E2E8F0" }]}
             onPress={() => router.push("/auth/login")}
             activeOpacity={0.9}
           >
             <Ionicons name="cloud-upload-outline" size={20} color="#0F766E" />
-            <Text style={[styles.clearText, { color: "#0F766E" }]}>Cloud Sync Account</Text>
+            <Text style={[styles.actionBtnText, { color: "#0F766E" }]}>Cloud Sync Account</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.clearBtn, darkMode && { backgroundColor: "#1e293b", borderColor: "#334155" }]}
+            style={[styles.actionBtn, { backgroundColor: cardBg, borderColor: dm ? "#334155" : "#E2E8F0" }]}
             onPress={handleLogout}
             activeOpacity={0.9}
           >
-            <Ionicons name="log-out-outline" size={20} color={darkMode ? "#94A3B8" : "#64748B"} />
-            <Text style={[styles.clearText, { color: darkMode ? "#94A3B8" : "#64748B" }]}>Sign Out</Text>
+            <Ionicons name="log-out-outline" size={20} color={dm ? "#94A3B8" : "#64748B"} />
+            <Text style={[styles.actionBtnText, { color: dm ? "#94A3B8" : "#64748B" }]}>Sign Out</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.clearBtn, darkMode && { backgroundColor: "#1e293b", borderColor: "#450a0a" }]}
+            style={[styles.actionBtn, { backgroundColor: cardBg, borderColor: dm ? "#450a0a" : "#FEE2E2", marginBottom: 40 }]}
             onPress={handleClearAllData}
             activeOpacity={0.9}
           >
             <Ionicons name="trash-outline" size={20} color="#EF4444" />
-            <Text style={styles.clearText}>Clear All Data</Text>
+            <Text style={[styles.actionBtnText, { color: "#EF4444" }]}>Clear All Data</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -274,11 +314,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     elevation: 3,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#1E1B4B",
-  },
+  headerTitle: { fontSize: 22, fontWeight: "800", color: "#1E1B4B" },
   scrollContent: { padding: 20 },
 
   profileCard: {
@@ -319,55 +355,41 @@ const styles = StyleSheet.create({
   },
 
   settingsGroup: {
-    backgroundColor: "#fff",
     borderRadius: 22,
     paddingHorizontal: 16,
-    marginBottom: 25,
+    marginBottom: 12,
     elevation: 2,
   },
-  darkGroup: { backgroundColor: "#334155" },
-
   settingRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 15,
+    paddingVertical: 14,
+    gap: 12,
   },
-  leftSide: { flexDirection: "row", alignItems: "center", gap: 15 },
+  leftSide: { flexDirection: "row", alignItems: "center", gap: 14, flex: 1 },
   iconCircle: {
     width: 38,
     height: 38,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
-  settingText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1E293B",
-  },
-  divider: { height: 1, backgroundColor: "#F1F5F9" },
+  settingText: { fontSize: 15, fontWeight: "700" },
+  settingSub: { fontSize: 12, fontWeight: "500", marginTop: 1 },
+  divider: { height: 1 },
 
-  // ✅ Clear button styles (replaces Sign Out)
-  clearBtn: {
+  actionBtn: {
     flexDirection: "row",
-    backgroundColor: "#fff",
-    padding: 18,
-    borderRadius: 22,
+    padding: 16,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
     borderWidth: 1,
-    borderColor: "#FEE2E2",
-    marginBottom: 30,
+    marginBottom: 10,
+    elevation: 1,
   },
-  darkClearBtn: {
-    backgroundColor: "#1e293b",
-    borderColor: "#450a0a",
-  },
-  clearText: {
-    color: "#EF4444",
-    fontWeight: "800",
-    fontSize: 16,
-  },
+  actionBtnText: { fontWeight: "700", fontSize: 15 },
 });

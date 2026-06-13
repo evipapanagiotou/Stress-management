@@ -114,9 +114,6 @@ const BREATHING_COOLDOWN_KEY = "notif:breathing:lastSent";
 const BREATHING_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
 
 export async function suggestBreathingExercise(): Promise<void> {
-  const notifsEnabled = await AsyncStorage.getItem("@settings_notifs");
-  if (notifsEnabled === "false") return;
-
   const { status } = await Notifications.getPermissionsAsync();
   if (status !== "granted") return;
 
