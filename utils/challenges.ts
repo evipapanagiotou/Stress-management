@@ -145,10 +145,26 @@ export async function recordStudySession({
   date?: Date;
 }) {
   const mins = Math.max(0, Math.round(minutes));
-  if (mins < 15) return;
+  if (!mins) return;
 
   const day = getDayKey(date);
   const stats = await loadStats();
+
+  // Dedicated cumulative counters (Marathon challenges) count every session with no minimum
+  for (const c of CHALLENGES) {
+    if (c.type === "dedicated_cumulative_minutes") {
+      const cur = stats.dedicatedMinutes[c.id] ?? 0;
+      if (cur < c.targetMinutes) {
+        stats.dedicatedMinutes[c.id] = Math.min(cur + mins, c.targetMinutes);
+      }
+    }
+  }
+
+  // All other challenge stats require at least 15 minutes
+  if (mins < 15) {
+    await saveStats(stats);
+    return;
+  }
 
   stats.totalStudyMinutes += mins;
   stats.totalSessions += 1;
@@ -180,16 +196,6 @@ export async function recordStudySession({
     const arr = stats.dailySubjects[day] ?? [];
     if (!arr.includes(s)) stats.dailySubjects[day] = [...arr, s];
     stats.subjectTotals[s] = (stats.subjectTotals[s] ?? 0) + mins;
-  }
-
-  // Update dedicated per-challenge cumulative counters
-  for (const c of CHALLENGES) {
-    if (c.type === "dedicated_cumulative_minutes") {
-      const cur = stats.dedicatedMinutes[c.id] ?? 0;
-      if (cur < c.targetMinutes) {
-        stats.dedicatedMinutes[c.id] = Math.min(cur + mins, c.targetMinutes);
-      }
-    }
   }
 
   await saveStats(stats);
