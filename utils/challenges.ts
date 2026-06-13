@@ -167,7 +167,8 @@ export async function recordStudySession({
   // All sessions count toward totals and daily minutes (no global minimum)
   stats.totalStudyMinutes += mins;
   stats.totalSessions += 1;
-  stats.maxSessionMinutes = Math.max(stats.maxSessionMinutes, mins);
+  // First Focus needs ≥15 min — only count sessions that meet the threshold
+  if (mins >= 15) stats.maxSessionMinutes = Math.max(stats.maxSessionMinutes, mins);
   stats.dailyStudyMinutes[day] = (stats.dailyStudyMinutes[day] ?? 0) + mins;
   stats.dailySessions[day] = (stats.dailySessions[day] ?? 0) + 1;
 
