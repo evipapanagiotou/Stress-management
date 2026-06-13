@@ -90,16 +90,11 @@ export default function SettingsScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              const logoutResult = await logout();
-              if (!logoutResult.success) {
-                Alert.alert("Sign out failed", logoutResult.error ?? "Could not sign out. Try again.");
-                return;
-              }
               await cancelAllNotifications();
               await AsyncStorage.clear();
               setSoundEnabled(true);
               setPrefs(null);
-              router.replace("/auth/login");
+              router.replace("/");
             } catch {
               Alert.alert("Error", "Could not clear data. Please try again.");
             }
