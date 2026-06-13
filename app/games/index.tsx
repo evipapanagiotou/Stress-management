@@ -19,7 +19,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { Audio } from "expo-av";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../context/ThemeContext";
+import { recordBreathingSession, recordBubblePopPlay } from "../../utils/challenges";
 
 /* ------------------------------------------------------------------ */
 /* Storage (optional logs)                                             */
@@ -105,15 +107,18 @@ const COLORS = [
 /* ------------------------------------------------------------------ */
 export default function ToolboxScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { width: W } = Dimensions.get("window");
   const { darkMode } = useTheme();
 
-  const bg = darkMode ? "#0f172a" : "#ffffff";
+  const bgColors = darkMode
+    ? (["#0B1220", "#0f172a"] as const)
+    : (["#F8FAFC", "#EEF2FF"] as const);
+  const bg = darkMode ? "#0B1220" : "#F8FAFC";
   const cardBg = darkMode ? "#1e293b" : "#ffffff";
-  const cardBorder = darkMode ? "#334155" : "#eef2f7";
-  const textPrimary = darkMode ? "#f1f5f9" : "#111111";
-  const textSecondary = darkMode ? "#94a3b8" : "#6b7280";
-  const iconBg = darkMode ? "#1e293b" : "#f3f4f6";
+  const cardBorder = darkMode ? "#334155" : "#E2E8F0";
+  const textPrimary = darkMode ? "#f1f5f9" : "#111827";
+  const textSecondary = darkMode ? "#94a3b8" : "#64748B";
 
   const [mode, setMode] = useState<Mode>("home");
 
@@ -295,15 +300,17 @@ export default function ToolboxScreen() {
 
       if (sessionSecondsLeft <= 0) {
         (async () => {
+          const now = new Date();
           await saveLog({
             id: uid(),
-            createdAt: new Date().toISOString(),
+            createdAt: now.toISOString(),
             game: "breathing",
             breathKind,
             pattern: p.label,
             breathsCompleted,
             detail: "breathing session completed",
           });
+          await recordBreathingSession({ kind: breathKind, hour: now.getHours() });
           await goHome();
         })();
         return;
@@ -437,105 +444,110 @@ export default function ToolboxScreen() {
   // ---------------- HOME ----------------
   if (mode === "home") {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
-        <LinearGradient
-          colors={["#FAD1C6", "#F49B8C", "#F06A5E"]}
-          style={styles.header}
-          start={{ x: 0.2, y: 0.1 }}
-          end={{ x: 0.9, y: 0.9 }}
-        >
-          <View pointerEvents="none" style={[styles.homeBlob, { top: 18, left: 18 }]} />
-          <View
-            pointerEvents="none"
-            style={[
-              styles.homeBlob,
-              { top: 34, right: -30, width: 140, height: 140, borderRadius: 70, opacity: 0.14 },
-            ]}
-          />
-
-          <View style={styles.headerContent}>
+      <LinearGradient colors={bgColors} style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1 }}>
+          {/* Header */}
+          <View style={[styles.homeHeader, { paddingTop: insets.top + 16 }]}>
             <TouchableOpacity
               onPress={() => (router.canGoBack() ? router.back() : router.push("/(tabs)/home"))}
-              style={styles.navBtn}
+              style={[styles.iconButton, { backgroundColor: cardBg }]}
             >
-              <Ionicons name="chevron-back" size={22} color="#111" />
+              <Ionicons name="chevron-back" size={22} color={textPrimary} />
+            </TouchableOpacity>
+            <View style={{ alignItems: "center" }}>
+              <Text style={[styles.homeTitle, { color: textPrimary }]}>Calm Space</Text>
+              <Text style={[styles.homeSub, { color: textSecondary }]}>Tools to ease stress & anxiety</Text>
+            </View>
+            <View style={styles.iconButtonGhost} />
+          </View>
+
+          {/* Cards */}
+          <View style={styles.homeBody}>
+            <TouchableOpacity
+              style={[styles.bigCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
+              activeOpacity={0.9}
+              onPress={() => setShowBreathChoice(true)}
+            >
+              <View style={styles.cardRow}>
+                <View style={[styles.cardIcon, { backgroundColor: darkMode ? "#0f172a" : "#EEF2FF" }]}>
+                  <Ionicons name="leaf-outline" size={30} color="#6366f1" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.cardTitle, { color: textPrimary }]}>Breathing Exercise</Text>
+                  <Text style={[styles.cardSub, { color: textSecondary }]}>Follow the rhythm to breathe deeply and relax</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={textSecondary} />
+              </View>
             </TouchableOpacity>
 
-            <View style={styles.headerCenter}>
-              <Text style={styles.title}>Your Calm Space</Text>
-              <Text style={styles.subtitle}>Tools to ease stress and anxiety</Text>
-            </View>
-
-            <View style={{ width: 40 }} />
+            <TouchableOpacity
+              style={[styles.bigCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
+              activeOpacity={0.9}
+              onPress={startBubbleGame}
+            >
+              <View style={styles.cardRow}>
+                <View style={[styles.cardIcon, { backgroundColor: darkMode ? "#0f172a" : "#ECFDF5" }]}>
+                  <Ionicons name="apps-outline" size={30} color="#0F766E" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.cardTitle, { color: textPrimary }]}>Bubble Pop</Text>
+                  <Text style={[styles.cardSub, { color: textSecondary }]}>Tap bubbles to pop them and level up</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={textSecondary} />
+              </View>
+            </TouchableOpacity>
           </View>
-        </LinearGradient>
 
-        <View style={[styles.homeBody, { backgroundColor: bg }]}>
-          <TouchableOpacity
-            style={[styles.bigCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
-            activeOpacity={0.9}
-            onPress={() => setShowBreathChoice(true)}
-          >
-            <View style={styles.cardRow}>
-              <View style={[styles.cardIcon, { backgroundColor: iconBg }]}>
-                <Ionicons name="leaf-outline" size={34} color="#2563eb" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textPrimary }]}>Breathing Exercise</Text>
-                <Text style={[styles.cardSub, { color: textSecondary }]}>Follow the rhythm to breathe deeply and relax</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
+          {/* Breathing choice modal */}
+          <Modal visible={showBreathChoice} transparent animationType="fade" onRequestClose={() => setShowBreathChoice(false)}>
+            <View style={styles.modalOverlay}>
+              <View style={[styles.sheet, { backgroundColor: cardBg }]}>
+                <View style={styles.sheetHeader}>
+                  <Text style={[styles.sheetTitle, { color: textPrimary }]}>Choose Breathing Type</Text>
+                  <TouchableOpacity
+                    onPress={() => setShowBreathChoice(false)}
+                    style={[styles.sheetClose, { backgroundColor: darkMode ? "#0B1220" : "#F1F5F9" }]}
+                  >
+                    <Ionicons name="close" size={20} color={textSecondary} />
+                  </TouchableOpacity>
+                </View>
 
-          <TouchableOpacity
-            style={[styles.bigCard, { backgroundColor: cardBg, borderColor: cardBorder }]}
-            activeOpacity={0.9}
-            onPress={startBubbleGame}
-          >
-            <View style={styles.cardRow}>
-              <View style={[styles.cardIcon, { backgroundColor: iconBg }]}>
-                <Ionicons name="apps-outline" size={34} color="#7c3aed" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textPrimary }]}>Bubble Pop</Text>
-                <Text style={[styles.cardSub, { color: textSecondary }]}>Tap bubbles to pop them and level up</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
+                <TouchableOpacity
+                  onPress={() => startBreathing("calming")}
+                  style={[styles.choiceCard, { backgroundColor: darkMode ? "#0f172a" : "#F8FAFC", borderColor: "#6366f1" }]}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.choiceCardRow}>
+                    <View style={[styles.choiceIcon, { backgroundColor: darkMode ? "#1e293b" : "#EEF2FF" }]}>
+                      <Ionicons name="leaf-outline" size={22} color="#6366f1" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.choiceTitle, { color: textPrimary }]}>Calming Breathing</Text>
+                      <Text style={[styles.choiceSub, { color: textSecondary }]}>4–2–6 · longer exhale for deep relaxation</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
 
-        {/* Breathing choice modal */}
-        <Modal visible={showBreathChoice} transparent animationType="fade" onRequestClose={() => setShowBreathChoice(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={[styles.sheet, darkMode && { backgroundColor: "#1e293b" }]}>
-              <View style={styles.sheetHeader}>
-                <Text style={[styles.sheetTitle, darkMode && { color: "#f1f5f9" }]}>Breathing Exercise</Text>
-                <TouchableOpacity onPress={() => setShowBreathChoice(false)} style={styles.sheetClose}>
-                  <Ionicons name="close" size={20} color={darkMode ? "#94a3b8" : "#111"} />
+                <TouchableOpacity
+                  onPress={() => startBreathing("box")}
+                  style={[styles.choiceCard, { backgroundColor: darkMode ? "#0f172a" : "#F8FAFC", borderColor: cardBorder }]}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.choiceCardRow}>
+                    <View style={[styles.choiceIcon, { backgroundColor: darkMode ? "#1e293b" : "#EEF2FF" }]}>
+                      <Ionicons name="square-outline" size={22} color="#6366f1" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.choiceTitle, { color: textPrimary }]}>Box Breathing</Text>
+                      <Text style={[styles.choiceSub, { color: textSecondary }]}>4–4–4–4 · steady rhythm for focus</Text>
+                    </View>
+                  </View>
                 </TouchableOpacity>
               </View>
-
-              <TouchableOpacity
-                onPress={() => startBreathing("calming")}
-                style={[styles.choiceCard, { backgroundColor: darkMode ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.75)", borderColor: "#F06A5E" }]}
-                activeOpacity={0.9}
-              >
-                <Text style={styles.choiceTitle}>Calming Breathing</Text>
-                <Text style={styles.choiceSub}>4–2–6 (longer exhale)</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => startBreathing("box")}
-                style={[styles.choiceCard, { backgroundColor: darkMode ? "rgba(30,41,59,0.8)" : "rgba(255,255,255,0.65)", borderColor: "#F49B8C" }]}
-                activeOpacity={0.9}
-              >
-                <Text style={styles.choiceTitle}>Box Breathing</Text>
-                <Text style={styles.choiceSub}>4–4–4–4 (steady rhythm)</Text>
-              </TouchableOpacity>
             </View>
-          </View>
-        </Modal>
-      </SafeAreaView>
+          </Modal>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
@@ -613,7 +625,7 @@ export default function ToolboxScreen() {
   // ---------------- BUBBLE POP ----------------
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
-      <View style={[styles.bubbleHeader, { backgroundColor: bg }]}>
+      <View style={[styles.bubbleHeader, { backgroundColor: cardBg, borderBottomColor: cardBorder }]}>
         <TouchableOpacity
           onPress={async () => {
             await saveLog({
@@ -630,8 +642,8 @@ export default function ToolboxScreen() {
           style={styles.bubbleBack}
           activeOpacity={0.9}
         >
-          <Ionicons name="chevron-back" size={22} color="#2563eb" />
-          <Text style={styles.bubbleBackText}>Back</Text>
+          <Ionicons name="chevron-back" size={22} color="#6366f1" />
+          <Text style={[styles.bubbleBackText, { color: "#6366f1" }]}>Back</Text>
         </TouchableOpacity>
 
         <Text style={[styles.bubbleHeaderTitle, { color: textPrimary }]}>Bubble Pop</Text>
@@ -647,7 +659,7 @@ export default function ToolboxScreen() {
           style={styles.bubbleReset}
           activeOpacity={0.9}
         >
-          <Ionicons name="refresh-outline" size={18} color="#2563eb" />
+          <Ionicons name="refresh-outline" size={18} color="#6366f1" />
         </TouchableOpacity>
       </View>
 
@@ -699,6 +711,7 @@ export default function ToolboxScreen() {
               level,
               detail: "bubble pop finished",
             });
+            await recordBubblePopPlay({ maxLevel: level });
             Alert.alert("Saved", `Score: ${bubbleScore} • Level: ${level}`);
             stopBubbleGame();
             await goHome();
@@ -716,107 +729,82 @@ export default function ToolboxScreen() {
 /* Styles                                                              */
 /* ------------------------------------------------------------------ */
 const styles = StyleSheet.create({
-  /* HOME HEADER */
-  header: {
-    paddingTop: 64,
-    paddingBottom: 28,
-    minHeight: 160,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    overflow: "hidden",
-  },
-  headerContent: {
-    paddingHorizontal: 20,
+  /* HOME */
+  homeHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 8,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
   },
-  headerCenter: { flex: 1, alignItems: "center", paddingHorizontal: 6 },
-  navBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    backgroundColor: "rgba(255,255,255,0.75)",
-    borderRadius: 12,
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: "#111",
-    textAlign: "center",
-    marginTop: 6,
-  },
-  subtitle: {
-    marginTop: 8,
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111",
-    opacity: 0.7,
-    textAlign: "center",
-  },
-  homeBlob: {
-    position: "absolute",
-    backgroundColor: "#fff",
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    opacity: 0.16,
-  },
-
-  homeBody: { flex: 1, paddingHorizontal: 20, paddingTop: 18, gap: 18 },
+  iconButtonGhost: { width: 44, height: 44 },
+  homeTitle: { fontSize: 24, fontWeight: "900" },
+  homeSub: { marginTop: 2, fontSize: 13, fontWeight: "600" },
+  homeBody: { flex: 1, paddingHorizontal: 20, paddingTop: 8, gap: 16 },
   bigCard: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#eef2f7",
+    elevation: 1,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 2,
-    minHeight: 120,
-    justifyContent: "center",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
   },
   cardRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   cardIcon: {
-    width: 56,
-    height: 56,
+    width: 52,
+    height: 52,
     borderRadius: 16,
-    backgroundColor: "#f3f4f6",
     alignItems: "center",
     justifyContent: "center",
   },
-  cardTitle: { fontSize: 22, fontWeight: "900", color: "#111" },
-  cardSub: { marginTop: 6, fontSize: 14, fontWeight: "700", color: "#6b7280", lineHeight: 18 },
+  cardTitle: { fontSize: 18, fontWeight: "900", marginBottom: 4 },
+  cardSub: { fontSize: 13, fontWeight: "600", lineHeight: 18 },
 
   /* MODAL SHEET */
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
   sheet: {
-    backgroundColor: "#FAD1C6",
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    padding: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
     gap: 12,
-    maxHeight: "75%",
   },
-  sheetHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sheetTitle: { fontSize: 16, fontWeight: "900", color: "#3B0D0B" },
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  sheetTitle: { fontSize: 17, fontWeight: "900" },
   sheetClose: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.75)",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(17,17,17,0.10)",
   },
-  choiceCard: { borderRadius: 18, padding: 14, borderWidth: 1, gap: 6 },
-  choiceTitle: { fontSize: 15, fontWeight: "900", color: "#3B0D0B" },
-  choiceSub: { fontSize: 13, fontWeight: "700", color: "#3B0D0B", opacity: 0.7 },
+  choiceCard: { borderRadius: 16, padding: 16, borderWidth: 1.5 },
+  choiceCardRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  choiceIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  choiceTitle: { fontSize: 15, fontWeight: "900", marginBottom: 2 },
+  choiceSub: { fontSize: 13, fontWeight: "600" },
 
   /* BREATHING SCREEN */
   breathBg: { flex: 1, backgroundColor: "#fff" },
@@ -931,7 +919,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === "ios" ? 10 : 10,
     paddingBottom: 10,
-    backgroundColor: "#fff",
+    borderBottomWidth: 1,
   },
   bubbleBack: { flexDirection: "row", alignItems: "center", gap: 6 },
   bubbleBackText: { color: "#2563eb", fontSize: 16, fontWeight: "700" },
@@ -960,10 +948,10 @@ const styles = StyleSheet.create({
   bubbleFooter: { paddingHorizontal: 20, paddingVertical: 14, backgroundColor: "#fff" },
   finishBtn: {
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#111",
+    backgroundColor: "#6366f1",
     flexDirection: "row",
     gap: 8,
   },
