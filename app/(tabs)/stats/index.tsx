@@ -176,21 +176,11 @@ export default function StatisticsScreen() {
 
     const totalSessionMinutes = daySessions.reduce((sum, s) => sum + (s.actualMinutes || 0), 0);
 
-    const focusedMinutes = daySessions
-      .filter((s) => s.completed && (s.interruptedCount || 0) === 0)
-      .reduce((sum, s) => sum + (s.actualMinutes || 0), 0);
-
-    const focusScore =
-      totalSessionMinutes > 0 ? Math.round((focusedMinutes / totalSessionMinutes) * 100) : null;
-
     return {
       studyMins,
       gamesCount,
       challengesCount,
       sessionsCount,
-      focusScore,
-      focusedMinutes,
-      totalSessionMinutes,
     };
   }, [pomoLog, gameLog, challengeStats, pomoSessions, selectedDayKey]);
 
@@ -493,28 +483,6 @@ const stressTrend = useMemo(() => {
             </View>
             <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
           </TouchableOpacity>
-
-          <View style={[styles.focusStrip, darkMode && styles.focusStripDark]}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Ionicons name="analytics" size={16} color="#6366f1" />
-              <Text style={[styles.focusTitle, darkMode && styles.textOnDark]}>Focus Score</Text>
-            </View>
-
-            <Text style={[styles.focusValue, darkMode && styles.textOnDark]}>
-              {statsForSelected.focusScore === null ? "—" : `${statsForSelected.focusScore}%`}
-            </Text>
-          </View>
-
-          {statsForSelected.focusScore === null ? (
-            <Text style={[styles.focusHint, darkMode && styles.subTextOnDark]}>
-              Focus Score appears when you log Pomodoro sessions (completed vs interrupted).
-            </Text>
-          ) : (
-            <Text style={[styles.focusHint, darkMode && styles.subTextOnDark]}>
-              {statsForSelected.focusedMinutes} focused minutes out of{" "}
-              {statsForSelected.totalSessionMinutes} session minutes.
-            </Text>
-          )}
 
           <View style={[styles.trendBox, darkMode && styles.trendBoxDark]}>
   <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -931,22 +899,6 @@ const styles = StyleSheet.create({
   balanceVal: { fontSize: 24, fontWeight: "900" },
   balanceLab: { fontSize: 12, color: "#64748B", fontWeight: "700", textAlign: "center" },
 
-  focusStrip: {
-    marginTop: 14,
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  focusStripDark: { backgroundColor: "#0B1220", borderColor: "#1F2937" },
-  focusTitle: { fontSize: 12, fontWeight: "900", color: "#111827" },
-  focusValue: { fontSize: 14, fontWeight: "900", color: "#111827" },
-  focusHint: { marginTop: 10, fontSize: 12, fontWeight: "700", color: "#64748B" },
   analyticsButton: {
     marginTop: 14,
     minHeight: 72,

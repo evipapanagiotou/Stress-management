@@ -496,6 +496,53 @@ export default function ToolboxScreen() {
                 <Ionicons name="chevron-forward" size={18} color={textSecondary} />
               </View>
             </TouchableOpacity>
+
+            {/* Benefits section */}
+            <View style={[styles.benefitsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <Text style={[styles.benefitsSectionTitle, { color: textSecondary }]}>WHY THESE HELP</Text>
+
+              <View style={styles.benefitRow}>
+                <View style={[styles.benefitIconWrap, { backgroundColor: darkMode ? "#0f172a" : "#EEF2FF" }]}>
+                  <Ionicons name="heart-outline" size={18} color="#6366f1" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.benefitLabel, { color: textPrimary }]}>Reduces anxiety</Text>
+                  <Text style={[styles.benefitDesc, { color: textSecondary }]}>Activates the body's natural calming response</Text>
+                </View>
+              </View>
+
+              <View style={[styles.benefitDivider, { backgroundColor: cardBorder }]} />
+
+              <View style={styles.benefitRow}>
+                <View style={[styles.benefitIconWrap, { backgroundColor: darkMode ? "#0f172a" : "#ECFDF5" }]}>
+                  <Ionicons name="flash-outline" size={18} color="#0F766E" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.benefitLabel, { color: textPrimary }]}>Sharpens focus</Text>
+                  <Text style={[styles.benefitDesc, { color: textSecondary }]}>More oxygen to the brain improves concentration</Text>
+                </View>
+              </View>
+
+              <View style={[styles.benefitDivider, { backgroundColor: cardBorder }]} />
+
+              <View style={styles.benefitRow}>
+                <View style={[styles.benefitIconWrap, { backgroundColor: darkMode ? "#0f172a" : "#FFF7ED" }]}>
+                  <Ionicons name="moon-outline" size={18} color="#D97706" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.benefitLabel, { color: textPrimary }]}>Better sleep</Text>
+                  <Text style={[styles.benefitDesc, { color: textSecondary }]}>Calms the mind before bed for deeper rest</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Tip card */}
+            <View style={[styles.tipCard, { backgroundColor: darkMode ? "#1e293b" : "#EEF2FF", borderColor: darkMode ? "#4338ca" : "#c7d2fe" }]}>
+              <Ionicons name="bulb-outline" size={15} color="#6366f1" />
+              <Text style={[styles.tipText, { color: darkMode ? "#a5b4fc" : "#4338ca" }]}>
+                Even 5 minutes of breathing lowers cortisol — your body's stress hormone
+              </Text>
+            </View>
           </View>
 
           {/* Breathing choice modal */}
@@ -771,6 +818,44 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 18, fontWeight: "900", marginBottom: 4 },
   cardSub: { fontSize: 13, fontWeight: "600", lineHeight: 18 },
+
+  /* BENEFITS + TIP */
+  benefitsCard: {
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    gap: 14,
+  },
+  benefitsSectionTitle: {
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  benefitRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  benefitIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  benefitLabel: { fontSize: 14, fontWeight: "800", marginBottom: 2 },
+  benefitDesc: { fontSize: 12, fontWeight: "600", lineHeight: 17 },
+  benefitDivider: { height: 1, opacity: 0.5 },
+  tipCard: {
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1.5,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  tipText: { flex: 1, fontSize: 13, fontWeight: "700", lineHeight: 19 },
 
   /* MODAL SHEET */
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
