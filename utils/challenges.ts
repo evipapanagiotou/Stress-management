@@ -232,7 +232,7 @@ export const CHALLENGES: ChallengeDef[] = [
   { id: "l5",  level: 5,  title: "Week Achiever",         description: "Study 30+ minutes daily for 5 consecutive weekdays",          type: "weekday_minutes_streak",    minPerWeekday: 30, targetWeekdays: 5 },
   { id: "l6",  level: 6,  title: "Pomodoro Novice",       description: "Complete 4 Pomodoro cycles (25 min) in one day",             type: "pomodoro_cycles_in_day",    pomodoroMinutes: 25, targetCycles: 4 },
   { id: "l7",  level: 7,  title: "Subject Explorer",      description: "Study 2 different subjects in one week",                      type: "subjects_in_week",          targetSubjects: 2 },
-  { id: "l8",  level: 8,  title: "Marathon Beginner",     description: "Complete a single 90-minute study session",                   type: "single_session_minutes",    targetMinutes: 90 },
+  { id: "l8",  level: 8,  title: "Marathon Beginner",     description: "Accumulate 90 minutes of total study time",                  type: "total_minutes",             targetMinutes: 90 },
   { id: "l9",  level: 9,  title: "Streak Builder",        description: "Maintain a 7-day study streak (30+ min/day)",                type: "daily_minutes_streak",      minPerDay: 30, targetDays: 7 },
   { id: "l10", level: 10, title: "Time Banker",           description: "Accumulate 10 total hours of study time",                     type: "total_minutes",             targetMinutes: 600 },
   { id: "l11", level: 11, title: "First Breaths",         description: "Complete 3 breathing exercises",                              type: "breathing_sessions_total",  targetSessions: 3 },
@@ -242,7 +242,7 @@ export const CHALLENGES: ChallengeDef[] = [
   { id: "l15", level: 15, title: "Bubble Buster",         description: "Play Bubble Pop 5 times for relaxation",                      type: "bubble_pop_plays",          targetPlays: 5 },
   { id: "l16", level: 16, title: "Breathing Master",      description: "Complete 15 breathing exercises in total",                    type: "breathing_sessions_total",  targetSessions: 15 },
   { id: "l17", level: 17, title: "Power Week",            description: "Complete 20 hours of study in one week",                      type: "weekly_total_minutes",      targetMinutes: 1200 },
-  { id: "l18", level: 18, title: "Marathon Runner",       description: "Complete a single 3-hour study session",                      type: "single_session_minutes",    targetMinutes: 180 },
+  { id: "l18", level: 18, title: "Marathon Runner",       description: "Accumulate 3 hours of total study time",                     type: "total_minutes",             targetMinutes: 180 },
   { id: "l19", level: 19, title: "Bubble Champion",       description: "Reach Level 3 in Bubble Pop",                                 type: "bubble_pop_max_level",      targetLevel: 3 },
   { id: "l20", level: 20, title: "Night Calm",            description: "Complete a Calming Breathing (4-2-6) after 10 PM",           type: "calming_breath_after_10pm", target: 1 },
 ];
