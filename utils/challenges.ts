@@ -30,6 +30,8 @@ export type ChallengeStats = {
   subjectTotals: Record<string, number>;
   // dedicated per-challenge cumulative minute counters (key = challenge id)
   dedicatedMinutes: Record<string, number>;
+  // per-day count of exactly-25-minute sessions (for Pomodoro Novice)
+  daily25MinSessions: Record<DayKey, number>;
   // games + wellness tracking
   breathingSessionsTotal: number;
   bubblePopPlays: number;
@@ -60,6 +62,7 @@ const defaultStats = (): ChallengeStats => ({
   dailySubjects: {},
   subjectTotals: {},
   dedicatedMinutes: {},
+  daily25MinSessions: {},
   breathingSessionsTotal: 0,
   bubblePopPlays: 0,
   bubblePopMaxLevel: 0,
@@ -107,6 +110,7 @@ export async function loadStats(): Promise<ChallengeStats> {
       dailySubjects: parsed.dailySubjects ?? {},
       subjectTotals: parsed.subjectTotals ?? {},
       dedicatedMinutes: parsed.dedicatedMinutes ?? {},
+      daily25MinSessions: parsed.daily25MinSessions ?? {},
       breathingSessionsTotal: parsed.breathingSessionsTotal ?? 0,
       bubblePopPlays: parsed.bubblePopPlays ?? 0,
       bubblePopMaxLevel: parsed.bubblePopMaxLevel ?? 0,
@@ -150,7 +154,7 @@ export async function recordStudySession({
   const day = getDayKey(date);
   const stats = await loadStats();
 
-  // Dedicated cumulative counters (Marathon challenges) count every session with no minimum
+  // Marathon challenges: dedicated cumulative counters, count every session (no minimum)
   for (const c of CHALLENGES) {
     if (c.type === "dedicated_cumulative_minutes") {
       const cur = stats.dedicatedMinutes[c.id] ?? 0;
@@ -160,19 +164,14 @@ export async function recordStudySession({
     }
   }
 
-  // All other challenge stats require at least 15 minutes
-  if (mins < 15) {
-    await saveStats(stats);
-    return;
-  }
-
+  // All sessions count toward totals and daily minutes (no global minimum)
   stats.totalStudyMinutes += mins;
   stats.totalSessions += 1;
   stats.maxSessionMinutes = Math.max(stats.maxSessionMinutes, mins);
-
   stats.dailyStudyMinutes[day] = (stats.dailyStudyMinutes[day] ?? 0) + mins;
   stats.dailySessions[day] = (stats.dailySessions[day] ?? 0) + 1;
 
+  // Bucket counts — each bucket enforces its own threshold
   const b = stats.dailyBuckets[day] ?? emptyBuckets();
   if (mins >= 15) b.ge15 += 1;
   if (mins >= 20) b.ge20 += 1;
@@ -183,6 +182,11 @@ export async function recordStudySession({
   if (mins >= 180) b.ge180 += 1;
   if (mins >= 240) b.ge240 += 1;
   stats.dailyBuckets[day] = b;
+
+  // Pomodoro Novice: count only exactly-25-minute sessions
+  if (mins === 25) {
+    stats.daily25MinSessions[day] = (stats.daily25MinSessions[day] ?? 0) + 1;
+  }
 
   if (mins >= 45) {
     stats.currentConsecutive45 += 1;
@@ -334,6 +338,14 @@ const getMaxWeekendTotal = (stats: ChallengeStats): number => {
   return best;
 };
 
+const getMaxDaily25MinSessions = (stats: ChallengeStats): number => {
+  let best = 0;
+  for (const day of Object.keys(stats.daily25MinSessions || {})) {
+    best = Math.max(best, stats.daily25MinSessions[day] ?? 0);
+  }
+  return best;
+};
+
 const getMaxSessionsInDayBucket = (stats: ChallengeStats, bucket: keyof BucketCounts): number => {
   let best = 0;
   for (const day of Object.keys(stats.dailyBuckets || {})) {
@@ -415,8 +427,7 @@ export const computeProgress = (c: ChallengeDef, stats: ChallengeStats): Challen
       return { ratio: clamp01(best / c.targetWeekdays), currentText: `${Math.min(best, c.targetWeekdays)} / ${c.targetWeekdays} weekdays`, completed: best >= c.targetWeekdays };
     }
     case "pomodoro_cycles_in_day": {
-      const bucket = c.pomodoroMinutes >= 25 ? "ge25" : "ge15";
-      const best = getMaxSessionsInDayBucket(stats, bucket as keyof BucketCounts);
+      const best = getMaxDaily25MinSessions(stats);
       return { ratio: clamp01(best / c.targetCycles), currentText: `${Math.min(best, c.targetCycles)} / ${c.targetCycles} cycles`, completed: best >= c.targetCycles };
     }
     case "subjects_in_week": {
